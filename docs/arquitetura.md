@@ -4,7 +4,7 @@ O sistema será dividido em quatro camadas principais:
 
 ## 1. Camada de Sensoriamento
 
-- Sensor de oxigênio dissolvido
+- Sensor de oxirredução (Nível da maré)
 - Microcontrolador (ESP32 ou Arduino)
 
 ## 2. Camada de Comunicação
