@@ -2,7 +2,7 @@
 
 Espera-se que o sistema seja capaz de:
 
-- Monitorar o oxigênio dissolvido em tempo real
+- Monitorar o nível da maré e o Eh em tempo real
 - Detectar automaticamente condições de risco ambiental
 - Fornecer dados confiáveis para análise
 - Contribuir para estratégias de conservação
