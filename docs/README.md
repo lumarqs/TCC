@@ -12,7 +12,7 @@ Desenvolver uma solução tecnológica capaz de auxiliar na preservação da bio
 
 - ESP32 / Arduino
 - Node.js ou Python
-- Banco de dados (Firebase ou PostgreSQL)
+- Banco de dados (MySQL)
 - Dashboard web
 
 ## Estrutura
