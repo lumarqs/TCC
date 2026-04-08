@@ -9,7 +9,7 @@ O sistema será dividido em quatro camadas principais:
 
 ## 2. Camada de Comunicação
 
-- Protocolo Wi-Fi ou LoRa
+- Protocolo Wi-Fi
 - Envio de dados via API REST
 
 ## 3. Camada de Processamento
