@@ -6,7 +6,8 @@ O sistema será composto por sensores instalados em campo, capazes de coletar da
 
 ## Objetivos
 
-- Monitorar o oxigênio dissolvido em tempo real
+- Monitorar o nível da maré
+- Monitorar o eH da água
 - Detectar condições críticas automaticamente
 - Armazenar dados históricos
 - Disponibilizar informações para análise e tomada de decisão
@@ -17,14 +18,3 @@ O sistema será composto por sensores instalados em campo, capazes de coletar da
 - Transmissão remota
 - Visualização em dashboard
 - Sistema de alertas baseado em limites críticos
-
-## Critérios de alerta (exemplo)
-
-- OD > 5 mg/L: condição adequada
-- OD entre 3 e 5 mg/L: atenção
-- OD < 3 mg/L: risco ambiental
-- OD < 2 mg/L: condição crítica
-
-<p align="center">
-    <img src="https://pt.wikipedia.org/wiki/Guar%C3%A1" width="300">
-</p>
