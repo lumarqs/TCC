@@ -10,10 +10,8 @@
       }
     },
     "android": {
-      "package": "com.example.mangrove"
-    },
-      "predictiveBackGestureEnabled": false,
-      "package": "com.rubraguara"
+      "package": "com.rubraguara",
+      "predictiveBackGestureEnabled": false
     },
     "web": {
       "output": "static",
