@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rubra Guará - Sobre</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --rubra: #d25240;
+      --rubra-dark: #b54335;
+      --teal: #6c9ea9;
+      --teal-dark: #55828c;
+      --green: #325543;
+      --green-dark: #254033;
+      --brown: #6c3229;
+      --cream: #fff1f1;
+      --white: #ffffff;
+      --gray: #f7f8fa;
+      --text: #2d2d2d;
+      --text-light: #6b6b6b;
+      --shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+      --shadow-hover: 0 20px 60px rgba(0, 0, 0, 0.12);
+      --radius: 20px;
+      --radius-sm: 12px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      color: var(--text);
+      background: var(--white);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Poppins', sans-serif;
+      line-height: 1.2;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    ul {
+      list-style: none;
+    }
+
+    img {
+      max-width: 100%;
+      display: block;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideInUp {
+      from { opacity: 0; transform: translateY(40px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-12px); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(210, 82, 64, 0.4); }
+      50% { transform: scale(1.02); box-shadow: 0 0 0 12px rgba(210, 82, 64, 0); }
+    }
+
+    .animate-fadeIn {
+      animation: fadeIn 0.8s ease forwards;
+    }
+
+    .animate-slideInUp {
+      opacity: 0;
+      animation: slideInUp 0.8s ease forwards;
+    }
+
+    .delay-100 { animation-delay: 0.1s; }
+    .delay-200 { animation-delay: 0.2s; }
+    .delay-300 { animation-delay: 0.3s; }
+    .delay-400 { animation-delay: 0.4s; }
+    .delay-500 { animation-delay: 0.5s; }
+    .delay-600 { animation-delay: 0.6s; }
+
+    /* Header */
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(210, 82, 64, 0.1);
+      transition: var(--transition);
+    }
+
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 72px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 1.4rem;
+      color: var(--rubra);
+    }
+
+    .logo-icon {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, var(--rubra) 0%, var(--brown) 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      animation: float 4s ease-in-out infinite;
+    }
+
+    .nav {
+      display: none;
+    }
+
+    .nav-list {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+
+    .nav-link {
+      font-weight: 500;
+      font-size: 0.95rem;
+      color: var(--text);
+      position: relative;
+      transition: var(--transition);
+    }
+
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--rubra);
+      transition: var(--transition);
+    }
+
+    .nav-link:hover {
+      color: var(--rubra);
+    }
+
+    .nav-link:hover::after {
+      width: 100%;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: var(--transition);
+      cursor: pointer;
+      border: none;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--rubra) 0%, var(--brown) 100%);
+      color: var(--white);
+      box-shadow: 0 4px 20px rgba(210, 82, 64, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(210, 82, 64, 0.4);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--rubra);
+      border: 2px solid var(--rubra);
+    }
+
+    .btn-secondary:hover {
+      background: var(--rubra);
+      color: var(--white);
+    }
+
+    .btn-camera {
+      background: linear-gradient(135deg, var(--green) 0%, var(--teal-dark) 100%);
+      color: var(--white);
+      box-shadow: 0 4px 20px rgba(50, 85, 67, 0.3);
+      padding: 10px 20px;
+      font-size: 0.9rem;
+    }
+
+    .btn-camera:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(50, 85, 67, 0.4);
+    }
+
+    .mobile-menu-btn {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 8px;
+    }
+
+    .mobile-menu-btn span {
+      width: 24px;
+      height: 2px;
+      background: var(--rubra);
+      transition: var(--transition);
+    }
+
+    .mobile-nav {
+      display: none;
+      position: absolute;
+      top: 72px;
+      left: 0;
+      width: 100%;
+      background: var(--white);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      border-top: 1px solid rgba(210, 82, 64, 0.1);
+    }
+
+    .mobile-nav.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .mobile-nav-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .mobile-nav-link {
+      font-weight: 500;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--gray);
+    }
+
+    /* Hero */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 120px 0 80px;
+      background: linear-gradient(135deg, var(--cream) 0%, var(--white) 50%, rgba(108, 158, 169, 0.1) 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -10%;
+      right: -10%;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(210, 82, 64, 0.12) 0%, transparent 70%);
+      border-radius: 50%;
+      animation: float 8s ease-in-out infinite;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: -10%;
+      left: -10%;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(50, 85, 67, 0.1) 0%, transparent 70%);
+      border-radius: 50%;
+      animation: float 10s ease-in-out infinite reverse;
+    }
+
+    .hero-inner {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 48px;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-content {
+      text-align: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(210, 82, 64, 0.1);
+      color: var(--rubra);
+      padding: 8px 16px;
+      border-radius: 50px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 24px;
+      animation: pulse 2s infinite;
+    }
+
+    .hero-title {
+      font-size: 2.6rem;
+      font-weight: 800;
+      color: var(--green);
+      margin-bottom: 20px;
+    }
+
+    .hero-title span {
+      color: var(--rubra);
+    }
+
+    .hero-description {
+      font-size: 1.1rem;
+      color: var(--text-light);
+      margin-bottom: 32px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .hero-visual {
+      display: flex;
+      justify-content: center;
+    }
+
+    .hero-card {
+      width: 280px;
+      height: 280px;
+      background: linear-gradient(135deg, var(--rubra) 0%, var(--brown) 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8rem;
+      box-shadow: var(--shadow-hover);
+      animation: float 5s ease-in-out infinite;
+      position: relative;
+    }
+
+    .hero-card::before {
+      content: '';
+      position: absolute;
+      inset: -20px;
+      border: 2px dashed rgba(210, 82, 64, 0.3);
+      border-radius: 50%;
+      animation: float 8s linear infinite reverse;
+    }
+
+    /* Section Common */
+    .section {
+      padding: 80px 0;
+    }
+
+    .section-header {
+      text-align: center;
+      max-width: 700px;
+      margin: 0 auto 56px;
+    }
+
+    .section-label {
+      display: inline-block;
+      background: rgba(210, 82, 64, 0.1);
+      color: var(--rubra);
+      padding: 6px 16px;
+      border-radius: 50px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--green);
+      margin-bottom: 16px;
+    }
+
+    .section-subtitle {
+      color: var(--text-light);
+      font-size: 1.05rem;
+    }
+
+    /* About Project */
+    .about-project {
+      background: var(--white);
+    }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 40px;
+      align-items: start;
+    }
+
+    .about-content h3 {
+      font-size: 1.5rem;
+      color: var(--rubra);
+      margin-bottom: 20px;
+    }
+
+    .about-content p {
+      color: var(--text-light);
+      margin-bottom: 16px;
+    }
+
+    .info-cards {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    .info-card {
+      background: var(--gray);
+      padding: 28px;
+      border-radius: var(--radius);
+      border-left: 4px solid var(--rubra);
+      transition: var(--transition);
+    }
+
+    .info-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow);
+    }
+
+    .info-card-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--rubra);
+      color: var(--white);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 16px;
+    }
+
+    .info-card h4 {
+      font-size: 1.1rem;
+      color: var(--green);
+      margin-bottom: 8px;
+    }
+
+    .info-card p {
+      color: var(--text-light);
+      font-size: 0.95rem;
+    }
+
+    .objectives-list {
+      margin-top: 24px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .objective-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 16px;
+      background: var(--cream);
+      border-radius: var(--radius-sm);
+    }
+
+    .objective-item span {
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .objective-item p {
+      color: var(--text);
+      font-size: 0.95rem;
+      margin: 0;
+    }
+
+    /* Foundation */
+    .foundation {
+      background: linear-gradient(135deg, var(--green) 0%, var(--teal-dark) 100%);
+      color: var(--white);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .foundation::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      opacity: 0.5;
+    }
+
+    .foundation .section-title,
+    .foundation .section-subtitle {
+      color: var(--white);
+    }
+
+    .foundation .section-label {
+      background: rgba(255, 255, 255, 0.15);
+      color: var(--white);
+    }
+
+    .foundation-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 40px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .foundation-card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 32px;
+      border-radius: var(--radius);
+      transition: var(--transition);
+    }
+
+    .foundation-card:hover {
+      background: rgba(255, 255, 255, 0.15);
+      transform: translateY(-5px);
+    }
+
+    .foundation-card h3 {
+      font-size: 1.3rem;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .foundation-card p {
+      opacity: 0.9;
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+
+    .foundation-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .contact-info {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-sm);
+      transition: var(--transition);
+    }
+
+    .contact-item:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .contact-item span {
+      font-size: 1.2rem;
+    }
+
+    /* Species */
+    .species {
+      background: var(--gray);
+    }
+
+    .species-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+
+    .species-card {
+      background: var(--white);
+      padding: 32px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+      text-align: center;
+      border-top: 4px solid transparent;
+    }
+
+    .species-card:hover {
+      transform: translateY(-8px);
+      box-shadow: var(--shadow-hover);
+      border-top-color: var(--rubra);
+    }
+
+    .species-icon {
+      width: 80px;
+      height: 80px;
+      background: var(--cream);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      margin: 0 auto 20px;
+      transition: var(--transition);
+    }
+
+    .species-card:hover .species-icon {
+      transform: scale(1.1) rotate(5deg);
+      background: linear-gradient(135deg, var(--rubra) 0%, var(--brown) 100%);
+    }
+
+    .species-card h3 {
+      font-size: 1.25rem;
+      color: var(--green);
+      margin-bottom: 12px;
+    }
+
+    .species-card p {
+      color: var(--text-light);
+      font-size: 0.95rem;
+    }
+
+    /* How it Works */
+    .how-it-works {
+      background: var(--white);
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 32px;
+      max-width: 900px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .step {
+      display: flex;
+      gap: 24px;
+      padding: 32px;
+      background: var(--gray);
+      border-radius: var(--radius);
+      transition: var(--transition);
+      position: relative;
+    }
+
+    .step:hover {
+      transform: translateX(8px);
+      box-shadow: var(--shadow);
+    }
+
+    .step-number {
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, var(--rubra) 0%, var(--brown) 100%);
+      color: var(--white);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      animation: float 4s ease-in-out infinite;
+    }
+
+    .step:nth-child(2) .step-number { animation-delay: 0.5s; }
+    .step:nth-child(3) .step-number { animation-delay: 1s; }
+
+    .step-content h3 {
+      font-size: 1.25rem;
+      color: var(--green);
+      margin-bottom: 8px;
+    }
+
+    .step-content p {
+      color: var(--text-light);
+      font-size: 0.95rem;
+    }
+
+    /* Technologies */
+    .technologies {
+      background: linear-gradient(135deg, var(--cream) 0%, var(--white) 100%);
+    }
+
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .tech-card {
+      background: var(--white);
+      padding: 28px;
+      border-radius: var(--radius);
+      text-align: center;
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+    }
+
+    .tech-card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .tech-icon {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, var(--teal) 0%, var(--teal-dark) 100%);
+      color: var(--white);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      margin: 0 auto 16px;
+    }
+
+    .tech-card h3 {
+      font-size: 1.1rem;
+      color: var(--green);
+      margin-bottom: 8px;
+    }
+
+    .tech-card p {
+      color: var(--text-light);
+      font-size: 0.85rem;
+    }
+
+    /* Footer */
+    .footer {
+      background: var(--green);
+      color: var(--white);
+      padding: 60px 0 24px;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 40px;
+      margin-bottom: 48px;
+    }
+
+    .footer-brand h3 {
+      font-size: 1.5rem;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .footer-brand p {
+      opacity: 0.8;
+      line-height: 1.7;
+      max-width: 300px;
+    }
+
+    .footer-links h4,
+    .footer-contact h4 {
+      font-size: 1.1rem;
+      margin-bottom: 20px;
+      color: var(--cream);
+    }
+
+    .footer-links ul {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .footer-links a {
+      opacity: 0.8;
+      transition: var(--transition);
+    }
+
+    .footer-links a:hover {
+      opacity: 1;
+      color: var(--rubra);
+      padding-left: 5px;
+    }
+
+    .footer-contact p {
+      opacity: 0.8;
+      margin-bottom: 8px;
+    }
+
+    .footer-bottom {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      text-align: center;
+    }
+
+    .footer-bottom p {
+      opacity: 0.7;
+      font-size: 0.9rem;
+    }
+
+    .footer-social {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .footer-social a {
+      width: 40px;
+      height: 40px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+
+    .footer-social a:hover {
+      background: var(--rubra);
+      transform: translateY(-3px);
+    }
+
+    /* Responsive */
+    @media (min-width: 768px) {
+      .nav {
+        display: block;
+      }
+
+      .mobile-menu-btn {
+        display: none;
+      }
+
+      .hero-inner {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .hero-content {
+        text-align: left;
+      }
+
+      .hero-title {
+        font-size: 3.4rem;
+      }
+
+      .hero-description {
+        margin-left: 0;
+        margin-right: 0;
+      }
+
+      .hero-actions {
+        flex-direction: row;
+      }
+
+      .hero-card {
+        width: 360px;
+        height: 360px;
+        font-size: 10rem;
+      }
+
+      .section-title {
+        font-size: 2.5rem;
+      }
+
+      .about-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .info-cards {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .foundation-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .species-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .steps {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .step {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .tech-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      .footer-grid {
+        grid-template-columns: 2fr 1fr 1fr;
+      }
+
+      .footer-bottom {
+        flex-direction: row;
+        justify-content: space-between;
+        text-align: left;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .hero-title {
+        font-size: 4rem;
+      }
+
+      .hero-card {
+        width: 420px;
+        height: 420px;
+        font-size: 12rem;
+      }
+
+      .species-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 767px) {
+      .header-inner {
+        height: 68px;
+      }
+
+      .hero {
+        padding-top: 100px;
+      }
+
+      .hero-title {
+        font-size: 2.2rem;
+      }
+
+      .hero-card {
+        width: 220px;
+        height: 220px;
+        font-size: 6rem;
+      }
+
+      .section {
+        padding: 60px 0;
+      }
+
+      .section-title {
+        font-size: 1.7rem;
+      }
+
+      .step {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .btn-camera {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="container">
+      <div class="header-inner">
+        <a href="#" class="logo">
+          <div class="logo-icon">🦩</div>
+          Rubra Guará
+        </a>
+        <nav class="nav">
+          <ul class="nav-list">
+            <li><a href="#sobre" class="nav-link">Sobre</a></li>
+            <li><a href="#fundacao" class="nav-link">Fundação</a></li>
+            <li><a href="#especies" class="nav-link">Espécies</a></li>
+            <li><a href="#funciona" class="nav-link">Como Funciona</a></li>
+            <li><a href="#tecnologias" class="nav-link">Tecnologias</a></li>
+            <li><a href="camera.html" class="btn btn-camera">📷 Voltar para Câmera</a></li>
+          </ul>
+        </nav>
+        <button class="mobile-menu-btn" aria-label="Menu" onclick="toggleMenu()">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+    </div>
+    <div class="mobile-nav" id="mobileNav">
+      <ul class="mobile-nav-list">
+        <li><a href="#sobre" class="mobile-nav-link" onclick="toggleMenu()">Sobre</a></li>
+        <li><a href="#fundacao" class="mobile-nav-link" onclick="toggleMenu()">Fundação</a></li>
+        <li><a href="#especies" class="mobile-nav-link" onclick="toggleMenu()">Espécies</a></li>
+        <li><a href="#funciona" class="mobile-nav-link" onclick="toggleMenu()">Como Funciona</a></li>
+        <li><a href="#tecnologias" class="mobile-nav-link" onclick="toggleMenu()">Tecnologias</a></li>
+        <li><a href="camera.html" class="btn btn-camera" style="width: 100%">📷 Voltar para Câmera</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container">
+        <div class="hero-inner">
+          <div class="hero-content animate-slideInUp">
+            <div class="hero-badge">🔬 TCC em Desenvolvimento de Sistemas</div>
+            <h1 class="hero-title">Rubra <span>Guará</span></h1>
+            <p class="hero-description">Sistema inteligente de monitoramento de fauna e ambiente para a conservação do manguezal, desenvolvido com tecnologia e propósito ambiental.</p>
+            <div class="hero-actions">
+              <a href="#sobre" class="btn btn-primary">Conhecer o Projeto</a>
+              <a href="camera.html" class="btn btn-secondary">📷 Voltar para Câmera</a>
+            </div>
+          </div>
+          <div class="hero-visual animate-slideInUp delay-300">
+            <div class="hero-card">🦩</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section about-project" id="sobre">
+      <div class="container">
+        <div class="section-header animate-slideInUp">
+          <span class="section-label">Sobre o Projeto</span>
+          <h2 class="section-title">Tecnologia a serviço da natureza</h2>
+          <p class="section-subtitle">O Rubra Guará nasceu da vontade de unir inovação tecnológica e preservação ambiental em um só propósito.</p>
+        </div>
+        <div class="about-grid">
+          <div class="about-content animate-slideInUp delay-200">
+            <h3>Monitoramento inteligente do manguezal</h3>
+            <p>O Rubra Guará é um Trabalho de Conclusão de Curso (TCC) do 3º ano do curso M-Tec em Desenvolvimento de Sistemas da ETEC Professor Camargo Aranha.</p>
+            <p>O projeto propõe o desenvolvimento de um sistema de monitoramento ambiental voltado para a observação e registro de espécies da fauna e flora do manguezal, com foco especial no guará, ícone da região costeira brasileira.</p>
+            <p>Através de câmeras e sensores conectados, a plataforma coleta, processa e apresenta dados em tempo real, auxiliando pesquisadores, educadores e a sociedade na compreensão e proteção desse ecossistema tão importante.</p>
+            <div class="objectives-list">
+              <div class="objective-item">
+                <span>🎯</span>
+                <p>Monitorar continuamente as espécies presentes no manguezal.</p>
+              </div>
+              <div class="objective-item">
+                <span>📊</span>
+                <p>Coletar dados ambientais relevantes para pesquisa e educação.</p>
+              </div>
+              <div class="objective-item">
+                <span>🤝</span>
+                <p>Apoiar instituições como a Fundação Florestal em suas ações de conservação.</p>
+              </div>
+              <div class="objective-item">
+                <span>📚</span>
+                <p>Conscientizar a comunidade escolar e local sobre a importância do manguezal.</p>
+              </div>
+            </div>
+          </div>
+          <div class="info-cards animate-slideInUp delay-400">
+            <div class="info-card">
+              <div class="info-card-icon">🏫</div>
+              <h4>Instituição</h4>
+              <p>ETEC Professor Camargo Aranha</p>
+            </div>
+            <div class="info-card">
+              <div class="info-card-icon">🎓</div>
+              <h4>Curso</h4>
+              <p>3º ano em M-Tec em Desenvolvimento de Sistemas</p>
+            </div>
+            <div class="info-card">
+              <div class="info-card-icon">👨‍🏫</div>
+              <h4>Orientador</h4>
+              <p>Professor Davi Vilar</p>
+            </div>
+            <div class="info-card">
+              <div class="info-card-icon">📋</div>
+              <h4>Tipo</h4>
+              <p>Trabalho de Conclusão de Curso (TCC)</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section foundation" id="fundacao">
+      <div class="container">
+        <div class="section-header animate-slideInUp">
+          <span class="section-label">Parceira</span>
+          <h2 class="section-title">Sobre a Fundação Florestal</h2>
+          <p class="section-subtitle">Uma organização comprometida com a preservação e recuperação dos ecossistemas naturais.</p>
+        </div>
+        <div class="foundation-grid">
+          <div class="foundation-card animate-slideInUp delay-200">
+            <h3>🌲 Quem somos</h3>
+            <p>A Fundação Florestal é uma organização não governamental dedicada à preservação ambiental, recuperação de áreas degradadas e educação socioambiental. Atua em parceria com comunidades, escolas e órgãos públicos para promover o desenvolvimento sustentável.</p>
+            <p>Com projetos em diversas regiões, a Fundação Florestal desenvolve ações práticas de reflorestamento, monitoramento de fauna e flora, e capacitação de jovens e adultos para a conservação do meio ambiente.</p>
+          </div>
+          <div class="foundation-card animate-slideInUp delay-300">
+            <h3>🎯 Nossa missão</h3>
+            <p>Proteger, recuperar e valorizar os ecossistemas naturais, promovendo a harmonia entre a sociedade e o meio ambiente por meio de pesquisa, educação e ação comunitária.</p>
+          </div>
+          <div class="foundation-card animate-slideInUp delay-400">
+            <h3>🤝 Como o Rubra Guará ajuda</h3>
+            <p>O sistema Rubra Guará contribui com a Fundação Florestal ao fornecer uma ferramenta tecnológica de baixo custo para monitoramento contínuo do manguezal. Os dados coletados auxiliam na identificação de padrões de comportamento das espécies e na detecção de mudanças ambientais.</p>
+          </div>
+          <div class="foundation-card animate-slideInUp delay-500">
+            <h3>📞 Contato</h3>
+            <p>Entre em contato com a Fundação Florestal para conhecer mais sobre os projetos e como colaborar.</p>
+            <div class="contact-info">
+              <div class="contact-item">
+                <span>📧</span>
+                <p>contato@fundacaoflorestal.org</p>
+              </div>
+              <div class="contact-item">
+                <span>📞</span>
+                <p>(11) 0000-0000</p>
+              </div>
+              <div class="contact-item">
+                <span>🌐</span>
+                <p>www.fundacaoflorestal.org</p>
+              </div>
+              <div class="contact-item">
+                <span>📍</span>
+                <p>São Paulo, SP - Brasil</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section species" id="especies">
+      <div class="container">
+        <div class="section-header animate-slideInUp">
+          <span class="section-label">Biodiversidade</span>
+          <h2 class="section-title">Espécies Monitoradas</h2>
+          <p class="section-subtitle">Conheça as principais espécies e elementos do manguezal acompanhados pelo Rubra Guará.</p>
+        </div>
+        <div class="species-grid">
+          <article class="species-card animate-slideInUp delay-100">
+            <div class="species-icon">🦩</div>
+            <h3>Guarás</h3>
+            <p>Ícone do manguezal brasileiro, o guará se alimenta de crustáceos e seu tom avermelhado intensifica conforme a dieta. É um indicador importante da saúde do ecossistema.</p>
+          </article>
+          <article class="species-card animate-slideInUp delay-200">
+            <div class="species-icon">🐦</div>
+            <h3>Guaiamim</h3>
+            <p>Ave pequena e ameaçada, o guaiamim habita áreas de mangue e restinga. Sua presença indica ambientes bem preservados e de baixa interferência humana.</p>
+          </article>
+          <article class="species-card animate-slideInUp delay-300">
+            <div class="species-icon">🌳</div>
+            <h3>Mangue-Maçã</h3>
+            <p>Espécie vegetal típica do manguezal, o mangue-maçã desempenha papel fundamental na fixação do solo e na proteção costeira contra erosões e marés.</p>
+          </article>
+          <article class="species-card animate-slideInUp delay-400">
+            <div class="species-icon">🥄</div>
+            <h3>Colhereiro</h3>
+            <p>A ave colhereiro é reconhecida pelo bico em forma de colher. Habita zonas de mangue e ajuda a controlar populações de pequenos peixes e invertebrados.</p>
+          </article>
+          <article class="species-card animate-slideInUp delay-500">
+            <div class="species-icon">🐟</div>
+            <h3>Martim-Pescador</h3>
+            <p>Conhecido por suas cores vibrantes e habilidade de pesca, o martim-pescador habita áreas próximas à água e indica a qualidade dos recursos hídricos.</p>
+          </article>
+          <article class="species-card animate-slideInUp delay-600">
+            <div class="species-icon">🌿</div>
+            <h3>Ambiente</h3>
+            <p>O monitoramento do ambiente inclui temperatura, umidade, salinidade e nível da água. Esses dados são essenciais para entender as mudanças no manguezal.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section how-it-works" id="funciona">
+      <div class="container">
+        <div class="section-header animate-slideInUp">
+          <span class="section-label">Processo</span>
+          <h2 class="section-title">Como Funciona</h2>
+          <p class="section-subtitle">Três etapas simples que transformam dados brutos em conhecimento ambiental.</p>
+        </div>
+        <div class="steps">
+          <div class="step animate-slideInUp delay-100">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <h3>Coleta</h3>
+              <p>Câmeras e sensores instalados no manguezal capturam imagens, vídeos e dados ambientais em tempo real, 24 horas por dia.</p>
+            </div>
+          </div>
+          <div class="step animate-slideInUp delay-200">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <h3>Processamento</h3>
+              <p>Os dados são enviados para o sistema, onde são organizados, armazenados e analisados de forma automática e segura.</p>
+            </div>
+          </div>
+          <div class="step animate-slideInUp delay-300">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <h3>Visualização</h3>
+              <p>Pesquisadores e a comunidade acessam informações atualizadas sobre espécies e condições ambientais de forma simples e intuitiva.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section technologies" id="tecnologias">
+      <div class="container">
+        <div class="section-header animate-slideInUp">
+          <span class="section-label">Stack</span>
+          <h2 class="section-title">Tecnologias Utilizadas</h2>
+          <p class="section-subtitle">Ferramentas modernas e acessíveis que tornam o Rubra Guará possível.</p>
+        </div>
+        <div class="tech-grid">
+          <div class="tech-card animate-slideInUp delay-100">
+            <div class="tech-icon">🌐</div>
+            <h3>HTML5</h3>
+            <p>Estrutura semântica e responsiva da aplicação.</p>
+          </div>
+          <div class="tech-card animate-slideInUp delay-200">
+            <div class="tech-icon">🎨</div>
+            <h3>CSS3</h3>
+            <p>Estilização moderna, animações e design responsivo.</p>
+          </div>
+          <div class="tech-card animate-slideInUp delay-300">
+            <div class="tech-icon">⚡</div>
+            <h3>JavaScript</h3>
+            <p>Interatividade, lógica e integração com câmeras e sensores.</p>
+          </div>
+          <div class="tech-card animate-slideInUp delay-400">
+            <div class="tech-icon">🐍</div>
+            <h3>Python</h3>
+            <p>Processamento de dados e reconhecimento de imagens.</p>
+          </div>
+          <div class="tech-card animate-slideInUp delay-500">
+            <div class="tech-icon">📷</div>
+            <h3>OpenCV</h3>
+            <p>Captura e análise de imagens em tempo real.</p>
+          </div>
+          <div class="tech-card animate-slideInUp delay-600">
+            <div class="tech-icon">🗄️</div>
+            <h3>Banco de Dados</h3>
+            <p>Armazenamento estruturado de registros e métricas.</p>
+          </div>
+          <div class="tech-card animate-slideInUp delay-100">
+            <div class="tech-icon">☁️</div>
+            <h3>API</h3>
+            <p>Comunicação entre dispositivos e a interface web.</p>
+          </div>
+          <div class="tech-card animate-slideInUp delay-200">
+            <div class="tech-icon">📱</div>
+            <h3>Mobile-First</h3>
+            <p>Design pensado primeiro para dispositivos móveis.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <h3>🦩 Rubra Guará</h3>
+          <p>Sistema de monitoramento ambiental desenvolvido como TCC na ETEC Professor Camargo Aranha, com foco na conservação do manguezal e suas espécies.</p>
+        </div>
+        <div class="footer-links">
+          <h4>Links Rápidos</h4>
+          <ul>
+            <li><a href="#sobre">Sobre o Projeto</a></li>
+            <li><a href="#fundacao">Fundação Florestal</a></li>
+            <li><a href="#especies">Espécies</a></li>
+            <li><a href="#funciona">Como Funciona</a></li>
+            <li><a href="#tecnologias">Tecnologias</a></li>
+            <li><a href="camera.html">Voltar para Câmera</a></li>
+          </ul>
+        </div>
+        <div class="footer-contact">
+          <h4>Contato</h4>
+          <p>ETEC Professor Camargo Aranha</p>
+          <p>TCC - Desenvolvimento de Sistemas</p>
+          <p>Orientador: Prof. Davi Vilar</p>
+          <p>São Paulo, SP</p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2024 Rubra Guará. Todos os direitos reservados.</p>
+        <div class="footer-social">
+          <a href="#" aria-label="Instagram">📷</a>
+          <a href="#" aria-label="GitHub">💻</a>
+          <a href="#" aria-label="Email">✉️</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function toggleMenu() {
+      const mobileNav = document.getElementById('mobileNav');
+      mobileNav.classList.toggle('active');
+    }
+
+    window.addEventListener('scroll', function() {
+      const header = document.querySelector('.header');
+      if (window.scrollY > 50) {
+        header.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.08)';
+      } else {
+        header.style.boxShadow = 'none';
+      }
+    });
+  </script>
+</body>
+</html>
