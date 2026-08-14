@@ -1,25 +1,82 @@
 import { useState } from "react";
 import {
   SafeAreaView,
-  StyleSheet,
-  StatusBar
+  StatusBar,
+  StyleSheet
 } from "react-native";
 
-import HomeScreen from "./src/screens/HomeScreen";
-import CaptureScreen from "./src/screens/CaptureScreen";
-import MapScreen from "./src/screens/MapScreen";
-import AboutScreen from "./src/screens/AboutScreen";
 import BottomNavigation from "./src/components/BottomNavigation";
+import AboutScreen from "./src/screens/AboutScreen";
+import CaptureScreen from "./src/screens/CaptureScreen";
+import HomeScreen from "./src/screens/HomeScreen";
+import LoginScreen from "./src/screens/LoginScreen";
+import MapScreen from "./src/screens/MapScreen";
+import SignupScreen from "./src/screens/SignupScreen";
+import VerificationScreen from "./src/screens/VerificationScreen";
 import { COLORS } from "./src/theme";
 
 export default function App() {
-  const [tela, setTela] = useState("inicio");
+  const [tela, setTela] = useState("login");
+
+  const [verificacao, setVerificacao] =
+    useState(null);
+
+  const [usuario, setUsuario] =
+    useState(null);
+
+  function iniciarVerificacao(dados) {
+    setVerificacao(dados);
+    setTela("verificacao");
+  }
+
+  function concluirAutenticacao(dados) {
+    setUsuario(
+      dados?.usuario || {
+        email: verificacao?.email
+      }
+    );
+
+    setVerificacao(null);
+    setTela("inicio");
+  }
+
+  function sair() {
+    setUsuario(null);
+    setVerificacao(null);
+    setTela("login");
+  }
 
   function renderizarTela() {
-    if (tela === "inicio") {
+    if (tela === "login") {
       return (
-        <HomeScreen
+        <LoginScreen
           onNavigate={setTela}
+          onVerification={iniciarVerificacao}
+        />
+      );
+    }
+
+    if (tela === "cadastro") {
+      return (
+        <SignupScreen
+          onNavigate={setTela}
+          onVerification={iniciarVerificacao}
+        />
+      );
+    }
+
+    if (tela === "verificacao") {
+      return (
+        <VerificationScreen
+          email={verificacao?.email}
+          finalidade={
+            verificacao?.finalidade
+          }
+          mensagem={verificacao?.mensagem}
+          onNavigate={setTela}
+          onAuthenticated={
+            concluirAutenticacao
+          }
         />
       );
     }
@@ -36,16 +93,30 @@ export default function App() {
       return (
         <AboutScreen
           onNavigate={setTela}
+          onLogout={sair}
+        />
+      );
+    }
+
+    if (tela === "captura") {
+      return (
+        <CaptureScreen
+          onNavigate={setTela}
         />
       );
     }
 
     return (
-      <CaptureScreen
+      <HomeScreen
         onNavigate={setTela}
       />
     );
   }
+
+  const telaPublica =
+    tela === "login" ||
+    tela === "cadastro" ||
+    tela === "verificacao";
 
   return (
     <SafeAreaView style={styles.container}>
@@ -56,10 +127,12 @@ export default function App() {
 
       {renderizarTela()}
 
-      <BottomNavigation
-        telaAtual={tela}
-        onChange={setTela}
-      />
+      {!telaPublica && (
+        <BottomNavigation
+          telaAtual={tela}
+          onChange={setTela}
+        />
+      )}
     </SafeAreaView>
   );
 }

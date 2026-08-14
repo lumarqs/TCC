@@ -105,6 +105,7 @@ export default function AboutScreen({
         </View>
       </View>
 
+        <View></View>
       <View style={styles.citacao}>
         <Text style={styles.citacaoTexto}>
           “Cada registro ajuda a revelar a vida que existe no mangue.”
