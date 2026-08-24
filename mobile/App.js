@@ -12,37 +12,19 @@ import HomeScreen from "./src/screens/HomeScreen";
 import LoginScreen from "./src/screens/LoginScreen";
 import MapScreen from "./src/screens/MapScreen";
 import SignupScreen from "./src/screens/SignupScreen";
-import VerificationScreen from "./src/screens/VerificationScreen";
 import { COLORS } from "./src/theme";
 
 export default function App() {
   const [tela, setTela] = useState("login");
+  const [usuario, setUsuario] = useState(null);
 
-  const [verificacao, setVerificacao] =
-    useState(null);
-
-  const [usuario, setUsuario] =
-    useState(null);
-
-  function iniciarVerificacao(dados) {
-    setVerificacao(dados);
-    setTela("verificacao");
-  }
-
-  function concluirAutenticacao(dados) {
-    setUsuario(
-      dados?.usuario || {
-        email: verificacao?.email
-      }
-    );
-
-    setVerificacao(null);
+  function entrar(dados) {
+    setUsuario(dados?.usuario || null);
     setTela("inicio");
   }
 
   function sair() {
     setUsuario(null);
-    setVerificacao(null);
     setTela("login");
   }
 
@@ -51,7 +33,7 @@ export default function App() {
       return (
         <LoginScreen
           onNavigate={setTela}
-          onVerification={iniciarVerificacao}
+          onAuthenticated={entrar}
         />
       );
     }
@@ -60,23 +42,6 @@ export default function App() {
       return (
         <SignupScreen
           onNavigate={setTela}
-          onVerification={iniciarVerificacao}
-        />
-      );
-    }
-
-    if (tela === "verificacao") {
-      return (
-        <VerificationScreen
-          email={verificacao?.email}
-          finalidade={
-            verificacao?.finalidade
-          }
-          mensagem={verificacao?.mensagem}
-          onNavigate={setTela}
-          onAuthenticated={
-            concluirAutenticacao
-          }
         />
       );
     }
@@ -109,14 +74,14 @@ export default function App() {
     return (
       <HomeScreen
         onNavigate={setTela}
+        usuario={usuario}
       />
     );
   }
 
   const telaPublica =
     tela === "login" ||
-    tela === "cadastro" ||
-    tela === "verificacao";
+    tela === "cadastro";
 
   return (
     <SafeAreaView style={styles.container}>

@@ -1,44 +1,52 @@
 import { useState } from "react";
 import {
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View
 } from "react-native";
 
 import { fazerLogin } from "../api/auth";
 import BrandHeader from "../components/BrandHeader";
 import PrimaryButton from "../components/PrimaryButton";
 import {
-    COLORS,
-    RADIUS,
-    SHADOW,
-    SPACING,
-    TYPOGRAPHY
+  COLORS,
+  RADIUS,
+  SHADOW,
+  SPACING,
+  TYPOGRAPHY
 } from "../theme";
 
 export default function LoginScreen({
   onNavigate,
-  onVerification
+  onAuthenticated
 }) {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
-  const [carregando, setCarregando] =
-    useState(false);
+  const [carregando, setCarregando] = useState(false);
 
   async function entrar() {
-    const emailNormalizado =
-      email.trim().toLowerCase();
+    const emailNormalizado = email
+      .trim()
+      .toLowerCase();
 
     if (!emailNormalizado || !senha) {
       Alert.alert(
         "Campos obrigatórios",
         "Informe seu e-mail e sua senha."
+      );
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+$/.test(emailNormalizado)) {
+      Alert.alert(
+        "E-mail inválido",
+        "Informe um e-mail válido."
       );
       return;
     }
@@ -51,17 +59,12 @@ export default function LoginScreen({
         senha
       });
 
-      onVerification({
-        email: emailNormalizado,
-        finalidade: "login",
-        mensagem:
-          dados.mensagem ||
-          "Enviamos um código de verificação para seu e-mail."
-      });
+      onAuthenticated(dados);
     } catch (error) {
       Alert.alert(
         "Não foi possível entrar",
-        error.message
+        error?.message ||
+          "Verifique seu e-mail e sua senha."
       );
     } finally {
       setCarregando(false);
@@ -100,11 +103,12 @@ export default function LoginScreen({
           <TextInput
             value={email}
             onChangeText={setEmail}
-            placeholder="seuemail@exemplo.com"
+            placeholder="seuemail@gmail.com"
             placeholderTextColor={COLORS.gray}
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
+            editable={!carregando}
             style={styles.input}
           />
 
@@ -119,6 +123,8 @@ export default function LoginScreen({
             placeholderTextColor={COLORS.gray}
             secureTextEntry
             autoCapitalize="none"
+            autoCorrect={false}
+            editable={!carregando}
             style={styles.input}
           />
 
@@ -126,7 +132,7 @@ export default function LoginScreen({
             onPress={() =>
               Alert.alert(
                 "Recuperação de senha",
-                "Essa função será adicionada na próxima etapa."
+                "Essa função será adicionada posteriormente."
               )
             }
             style={styles.esqueci}
@@ -151,6 +157,7 @@ export default function LoginScreen({
 
           <Pressable
             onPress={() => onNavigate("cadastro")}
+            disabled={carregando}
           >
             <Text style={styles.link}>
               Criar cadastro
