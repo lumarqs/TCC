@@ -2,7 +2,8 @@ import { useState } from "react";
 import {
   SafeAreaView,
   StatusBar,
-  StyleSheet
+  StyleSheet,
+  View
 } from "react-native";
 
 import BottomNavigation from "./src/components/BottomNavigation";
@@ -84,27 +85,40 @@ export default function App() {
     tela === "cadastro";
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
       <StatusBar
         barStyle="dark-content"
         backgroundColor={COLORS.pink}
       />
 
-      {renderizarTela()}
+      <View style={styles.conteudo}>
+        {renderizarTela()}
+      </View>
 
       {!telaPublica && (
-        <BottomNavigation
-          telaAtual={tela}
-          onChange={setTela}
-        />
+        <View style={styles.areaNavegacao}>
+          <BottomNavigation
+            telaAtual={tela}
+            onChange={setTela}
+          />
+        </View>
       )}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
     backgroundColor: COLORS.pink
+  },
+
+  conteudo: {
+    flex: 1
+  },
+
+  areaNavegacao: {
+    backgroundColor: COLORS.white,
+    paddingBottom: 8
   }
 });
