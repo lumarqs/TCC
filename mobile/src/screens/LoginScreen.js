@@ -40,14 +40,20 @@ export default function LoginScreen({
         "Campos obrigatórios",
         "Informe seu e-mail e sua senha."
       );
+
       return;
     }
 
-    if (!/^[^\s@]+@[^\s@]+$/.test(emailNormalizado)) {
+    if (
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+        emailNormalizado
+      )
+    ) {
       Alert.alert(
         "E-mail inválido",
         "Informe um e-mail válido."
       );
+
       return;
     }
 
@@ -136,6 +142,7 @@ export default function LoginScreen({
               )
             }
             style={styles.esqueci}
+            disabled={carregando}
           >
             <Text style={styles.esqueciTexto}>
               Esqueci minha senha

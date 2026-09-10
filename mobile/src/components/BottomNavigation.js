@@ -1,8 +1,8 @@
 import {
-  View,
-  Text,
   Pressable,
-  StyleSheet
+  StyleSheet,
+  Text,
+  View
 } from "react-native";
 
 import {
@@ -25,7 +25,12 @@ const ITEMS = [
   {
     id: "mapa",
     label: "Mapa",
-    icon: "◉"
+    icon: "◎"
+  },
+  {
+    id: "perfil",
+    label: "Perfil",
+    icon: "●"
   },
   {
     id: "sobre",
@@ -83,7 +88,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
-    paddingHorizontal: SPACING.sm,
+    paddingHorizontal: SPACING.xs,
     paddingTop: SPACING.sm,
     paddingBottom: SPACING.md
   },
@@ -100,7 +105,7 @@ const styles = StyleSheet.create({
   },
 
   icon: {
-    fontSize: 22,
+    fontSize: 21,
     color: COLORS.gray,
     fontWeight: "700"
   },
@@ -110,7 +115,7 @@ const styles = StyleSheet.create({
   },
 
   label: {
-    fontSize: 11,
+    fontSize: 10,
     marginTop: 3,
     color: COLORS.gray
   },

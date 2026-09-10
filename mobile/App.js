@@ -6,18 +6,22 @@ import {
   View
 } from "react-native";
 
+import { limparSessao } from "./src/api/auth";
+
 import BottomNavigation from "./src/components/BottomNavigation";
 import AboutScreen from "./src/screens/AboutScreen";
 import CaptureScreen from "./src/screens/CaptureScreen";
 import HomeScreen from "./src/screens/HomeScreen";
 import LoginScreen from "./src/screens/LoginScreen";
 import MapScreen from "./src/screens/MapScreen";
+import ProfileScreen from "./src/screens/ProfileScreen";
 import SignupScreen from "./src/screens/SignupScreen";
 import { COLORS } from "./src/theme";
 
 export default function App() {
   const [tela, setTela] = useState("login");
   const [usuario, setUsuario] = useState(null);
+  const [fotoPerfil, setFotoPerfil] = useState(null);
 
   function entrar(dados) {
     setUsuario(dados?.usuario || null);
@@ -25,7 +29,9 @@ export default function App() {
   }
 
   function sair() {
+    limparSessao();
     setUsuario(null);
+    setFotoPerfil(null);
     setTela("login");
   }
 
@@ -68,6 +74,19 @@ export default function App() {
       return (
         <CaptureScreen
           onNavigate={setTela}
+          usuario={usuario}
+        />
+      );
+    }
+
+    if (tela === "perfil") {
+      return (
+        <ProfileScreen
+          usuario={usuario}
+          fotoPerfil={fotoPerfil}
+          onChangeFoto={setFotoPerfil}
+          onLogout={sair}
+          onNavigate={setTela}
         />
       );
     }
@@ -76,6 +95,7 @@ export default function App() {
       <HomeScreen
         onNavigate={setTela}
         usuario={usuario}
+        fotoPerfil={fotoPerfil}
       />
     );
   }

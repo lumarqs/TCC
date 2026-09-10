@@ -1,5 +1,38 @@
 import { WORKER_URL } from "../config";
 
+let tokenAtual = null;
+
+function obterMensagemErro(dados) {
+  return (
+    dados?.erro ||
+    dados?.mensagem ||
+    "Não foi possível concluir a operação."
+  );
+}
+
+async function transformarResposta(resposta) {
+  let dados;
+
+  try {
+    dados = await resposta.json();
+  } catch {
+    throw new Error(
+      "O servidor retornou uma resposta inválida."
+    );
+  }
+
+  if (
+    !resposta.ok ||
+    dados?.sucesso === false
+  ) {
+    throw new Error(
+      obterMensagemErro(dados)
+    );
+  }
+
+  return dados;
+}
+
 async function requestAuth(path, body) {
   let resposta;
 
@@ -21,28 +54,61 @@ async function requestAuth(path, body) {
     );
   }
 
-  let dados;
+  return transformarResposta(resposta);
+}
+
+async function requestProtegida(
+  path,
+  opcoes = {}
+) {
+  if (!tokenAtual) {
+    throw new Error(
+      "Faça login para continuar."
+    );
+  }
+
+  const headers = {
+    Accept: "application/json",
+    ...(opcoes.headers || {}),
+    Authorization: `Bearer ${tokenAtual}`
+  };
+
+  let resposta;
 
   try {
-    dados = await resposta.json();
+    resposta = await fetch(
+      `${WORKER_URL}${path}`,
+      {
+        ...opcoes,
+        headers
+      }
+    );
   } catch {
     throw new Error(
-      "O servidor retornou uma resposta inválida."
+      "Não foi possível conectar ao servidor."
     );
   }
 
-  if (
-    !resposta.ok ||
-    dados?.sucesso === false
-  ) {
-    throw new Error(
-      dados?.erro ||
-        dados?.mensagem ||
-        "Não foi possível concluir a operação."
-    );
-  }
+  try {
+    const dados =
+      await transformarResposta(resposta);
 
-  return dados;
+    return dados;
+  } catch (error) {
+    if (resposta.status === 401) {
+      tokenAtual = null;
+    }
+
+    throw error;
+  }
+}
+
+export function obterToken() {
+  return tokenAtual;
+}
+
+export function limparSessao() {
+  tokenAtual = null;
 }
 
 export function cadastrarUsuario({
@@ -60,15 +126,49 @@ export function cadastrarUsuario({
   );
 }
 
-export function fazerLogin({
+export async function fazerLogin({
   email,
   senha
 }) {
-  return requestAuth(
+  const dados = await requestAuth(
     "/auth/login",
     {
       email,
       senha
+    }
+  );
+
+  if (!dados?.token) {
+    throw new Error(
+      "O servidor não retornou o token de acesso."
+    );
+  }
+
+  tokenAtual = dados.token;
+
+  return dados;
+}
+
+export function obterMeuPerfil() {
+  return requestProtegida(
+    "/usuarios/me"
+  );
+}
+
+export function obterMinhasObservacoes() {
+  return requestProtegida(
+    "/observacoes/minhas"
+  );
+}
+
+export function analisarImagem(
+  formData
+) {
+  return requestProtegida(
+    "/analisar-imagem",
+    {
+      method: "POST",
+      body: formData
     }
   );
 }

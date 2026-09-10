@@ -1,29 +1,82 @@
 import {
-  View,
-  Text,
+  Image,
+  Pressable,
+  ScrollView,
   StyleSheet,
-  Pressable
+  Text,
+  View
 } from "react-native";
 
 import BrandHeader from "../components/BrandHeader";
 import {
   COLORS,
   RADIUS,
-  SPACING,
   SHADOW,
+  SPACING,
   TYPOGRAPHY
 } from "../theme";
 
 export default function HomeScreen({
-  onNavigate
+  onNavigate,
+  usuario,
+  fotoPerfil
 }) {
+  const nome =
+    usuario?.nome || "Visitante";
+
+  const cargo =
+    usuario?.cargo || "membro";
+
+  const pontos =
+    usuario?.pontos ?? 0;
+
   return (
-    <View style={styles.container}>
-      <BrandHeader
-        eyebrow="RUBRA • GUARÁ"
-        title="Conheça o mangue ao seu redor"
-        description="Registre espécies, acompanhe os dados e observe a transformação da região."
-      />
+    <ScrollView
+      contentContainerStyle={styles.container}
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={styles.topo}>
+        <BrandHeader
+          eyebrow="RUBRA • GUARÁ"
+          title="Conheça o mangue ao seu redor"
+          description="Registre espécies, acompanhe os dados e observe a transformação da região."
+        />
+
+        <Pressable
+          onPress={() => onNavigate("perfil")}
+          style={styles.perfilAtalho}
+        >
+          {fotoPerfil ? (
+            <Image
+              source={{ uri: fotoPerfil }}
+              style={styles.perfilImagem}
+            />
+          ) : (
+            <Text style={styles.perfilIcone}>
+              👤
+            </Text>
+          )}
+        </Pressable>
+      </View>
+
+      <Pressable
+        onPress={() => onNavigate("perfil")}
+        style={styles.resumoUsuario}
+      >
+        <View>
+          <Text style={styles.resumoNome}>
+            Olá, {nome}
+          </Text>
+
+          <Text style={styles.resumoDetalhes}>
+            {cargo} • {pontos} pontos
+          </Text>
+        </View>
+
+        <Text style={styles.seta}>
+          ›
+        </Text>
+      </Pressable>
 
       <View style={styles.heroCard}>
         <View style={styles.heroCircle} />
@@ -63,7 +116,7 @@ export default function HomeScreen({
           onPress={() => onNavigate("mapa")}
         >
           <Text style={styles.cardIcon}>
-            ◉
+            ◎
           </Text>
 
           <Text style={styles.cardTitle}>
@@ -83,7 +136,7 @@ export default function HomeScreen({
           onPress={() => onNavigate("sobre")}
         >
           <Text style={styles.cardIcon}>
-            ?
+            i
           </Text>
 
           <Text style={styles.cardTitle}>
@@ -95,16 +148,83 @@ export default function HomeScreen({
           </Text>
         </Pressable>
       </View>
-    </View>
+
+      <Pressable
+        onPress={() => onNavigate("perfil")}
+        style={styles.perfilBotao}
+      >
+        <Text style={styles.perfilBotaoTexto}>
+          Ver meu perfil
+        </Text>
+      </Pressable>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: COLORS.pink,
     padding: SPACING.lg,
-    paddingTop: 64
+    paddingTop: 52,
+    paddingBottom: SPACING.xxl
+  },
+
+  topo: {
+    position: "relative"
+  },
+
+  perfilAtalho: {
+    position: "absolute",
+    right: 0,
+    top: 2,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: COLORS.white,
+    ...SHADOW.card
+  },
+
+  perfilImagem: {
+    width: 48,
+    height: 48,
+    borderRadius: 24
+  },
+
+  perfilIcone: {
+    fontSize: 25
+  },
+
+  resumoUsuario: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: COLORS.white,
+    borderRadius: RADIUS.md,
+    marginBottom: SPACING.lg,
+    padding: SPACING.md,
+    ...SHADOW.card
+  },
+
+  resumoNome: {
+    color: COLORS.brown,
+    fontSize: 16,
+    fontWeight: "800"
+  },
+
+  resumoDetalhes: {
+    color: COLORS.green,
+    fontSize: 13,
+    fontWeight: "700",
+    marginTop: 4
+  },
+
+  seta: {
+    color: COLORS.coral,
+    fontSize: 30,
+    fontWeight: "300"
   },
 
   heroCard: {
@@ -207,5 +327,20 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 13,
     lineHeight: 18
+  },
+
+  perfilBotao: {
+    alignItems: "center",
+    borderColor: COLORS.green,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    marginTop: SPACING.lg,
+    paddingVertical: SPACING.md
+  },
+
+  perfilBotaoTexto: {
+    color: COLORS.green,
+    fontSize: 15,
+    fontWeight: "800"
   }
 });
