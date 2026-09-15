@@ -1,22 +1,23 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
 import {
-    Alert,
-    Image,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View
+  Alert,
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View
 } from "react-native";
 
 import BrandHeader from "../components/BrandHeader";
 import {
-    COLORS,
-    RADIUS,
-    SHADOW,
-    SPACING,
-    TYPOGRAPHY
+  COLORS,
+  RADIUS,
+  SHADOW,
+  SPACING,
+  TYPOGRAPHY
 } from "../theme";
 
 export default function ProfileScreen({
@@ -28,7 +29,18 @@ export default function ProfileScreen({
   const [carregandoFoto, setCarregandoFoto] =
     useState(false);
 
+  function chaveFotoPerfil() {
+    const email =
+      usuario?.email || "usuario";
+
+    return `@rubra_guara_foto_${email}`;
+  }
+
   async function escolherFoto() {
+    if (carregandoFoto) {
+      return;
+    }
+
     setCarregandoFoto(true);
 
     try {
@@ -40,6 +52,7 @@ export default function ProfileScreen({
           "Permissão necessária",
           "Permita o acesso às fotos para escolher uma imagem de perfil."
         );
+
         return;
       }
 
@@ -53,17 +66,38 @@ export default function ProfileScreen({
         });
 
       if (
-        !resultado.canceled &&
-        resultado.assets?.length > 0
+        resultado.canceled ||
+        !resultado.assets ||
+        resultado.assets.length === 0
       ) {
-        onChangeFoto(
-          resultado.assets[0].uri
-        );
+        return;
       }
-    } catch {
+
+      const uri =
+        resultado.assets[0].uri;
+
+      // Atualiza a tela imediatamente.
+      onChangeFoto(uri);
+
+      // Salva a foto no armazenamento local do celular.
+      await AsyncStorage.setItem(
+        chaveFotoPerfil(),
+        uri
+      );
+
       Alert.alert(
-        "Não foi possível escolher a foto",
-        "Tente novamente."
+        "Foto atualizada",
+        "Sua foto de perfil foi salva neste dispositivo."
+      );
+    } catch (erro) {
+      console.log(
+        "Erro ao escolher ou salvar foto:",
+        erro
+      );
+
+      Alert.alert(
+        "Erro ao salvar foto",
+        "Não foi possível salvar a foto de perfil. Tente novamente."
       );
     } finally {
       setCarregandoFoto(false);
@@ -132,9 +166,7 @@ export default function ProfileScreen({
 
           <View style={styles.botaoFoto}>
             <Text style={styles.botaoFotoTexto}>
-              {carregandoFoto
-                ? "..."
-                : "＋"}
+              {carregandoFoto ? "..." : "+"}
             </Text>
           </View>
         </Pressable>
@@ -289,9 +321,9 @@ const styles = StyleSheet.create({
 
   botaoFotoTexto: {
     color: COLORS.white,
-    fontSize: 22,
+    fontSize: 23,
     fontWeight: "800",
-    lineHeight: 24
+    lineHeight: 25
   },
 
   nome: {

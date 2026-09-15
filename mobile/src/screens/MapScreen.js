@@ -1,386 +1,280 @@
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import {
-  View,
-  Text,
+  ActivityIndicator,
   StyleSheet,
-  Alert,
-  Pressable,
-  ScrollView,
-  ActivityIndicator
+  Text,
+  View
 } from "react-native";
-import MapView, { Circle } from "react-native-maps";
-import * as Location from "expo-location";
+import { WebView } from "react-native-webview";
 
 import BrandHeader from "../components/BrandHeader";
-import PrimaryButton from "../components/PrimaryButton";
 import {
   COLORS,
   RADIUS,
-  SPACING,
-  SHADOW
+  SHADOW,
+  SPACING
 } from "../theme";
-import {
-  WORKER_URL,
-  ESPECIES
-} from "../config";
 
-export default function MapScreen() {
-  const [especieSelecionada, setEspecieSelecionada] =
-    useState("guaiamim");
-
-  const [pontosMapa, setPontosMapa] =
-    useState([]);
-
-  const [regiaoMapa, setRegiaoMapa] =
-    useState(null);
-
-  const [carregando, setCarregando] =
-    useState(true);
-
-  const [erro, setErro] =
-    useState(null);
-
-  useEffect(() => {
-    inicializarMapa();
-  }, []);
-
-  async function inicializarMapa() {
-    setCarregando(true);
-    setErro(null);
-
-    try {
-      const permissao =
-        await Location.requestForegroundPermissionsAsync();
-
-      if (permissao.status !== "granted") {
-        throw new Error(
-          "Permita o acesso à localização para visualizar o mapa."
+export default function MapScreen({
+  onNavigate,
+  observacoes = []
+}) {
+  const marcadores = useMemo(() => {
+    return observacoes
+      .filter((item) => {
+        const latitude = Number(
+          item.latitude ??
+          item.lat ??
+          item.localizacao?.latitude
         );
-      }
 
-      const posicao =
-        await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.High
-        });
+        const longitude = Number(
+          item.longitude ??
+          item.lng ??
+          item.localizacao?.longitude
+        );
 
-      const regiaoAtual = {
-        latitude: posicao.coords.latitude,
-        longitude: posicao.coords.longitude,
-        latitudeDelta: 0.025,
-        longitudeDelta: 0.025
-      };
+        return (
+          Number.isFinite(latitude) &&
+          Number.isFinite(longitude)
+        );
+      })
+      .map((item) => ({
+        latitude: Number(
+          item.latitude ??
+          item.lat ??
+          item.localizacao.latitude
+        ),
+        longitude: Number(
+          item.longitude ??
+          item.lng ??
+          item.localizacao.longitude
+        ),
+        titulo:
+          item.especie ||
+          item.nome_especie ||
+          item.nome ||
+          "Observação",
+        descricao:
+          item.descricao ||
+          item.observacao ||
+          "Registro de biodiversidade"
+      }));
+  }, [observacoes]);
 
-      setRegiaoMapa(regiaoAtual);
+  const mapaHtml = useMemo(() => {
+    const centro = marcadores.length
+      ? [
+          marcadores[0].latitude,
+          marcadores[0].longitude
+        ]
+      : [-1.4558, -48.4902];
 
-      await carregarPontos(
-        "guaiamim"
-      );
-    } catch (error) {
-      setErro(
-        error instanceof Error
-          ? error.message
-          : "Não foi possível carregar o mapa."
-      );
-    } finally {
-      setCarregando(false);
+    const marcadoresJson =
+      JSON.stringify(marcadores);
+
+    return `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
+  />
+
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+
+  <style>
+    html,
+    body,
+    #map {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background: #fff1f1;
     }
-  }
 
-  async function carregarPontos(especie) {
-    try {
-      const url =
-        `${WORKER_URL}/heatmap?species=` +
-        encodeURIComponent(especie);
-
-      const resposta = await fetch(url);
-      const dados = await resposta.json();
-
-      if (!resposta.ok || !dados.sucesso) {
-        throw new Error(
-          dados.erro || "Erro ao buscar registros."
-        );
-      }
-
-      const pontos = (dados.pontos || [])
-        .map((ponto) => ({
-          latitude: Number(ponto.latitude),
-          longitude: Number(ponto.longitude),
-          quantidade: Number(ponto.quantidade)
-        }))
-        .filter(
-          (ponto) =>
-            Number.isFinite(ponto.latitude) &&
-            Number.isFinite(ponto.longitude) &&
-            Number.isFinite(ponto.quantidade)
-        );
-
-      setPontosMapa(pontos);
-    } catch (error) {
-      Alert.alert(
-        "Erro nos dados",
-        error instanceof Error
-          ? error.message
-          : "Não foi possível carregar os registros."
-      );
+    .leaflet-control-attribution {
+      font-size: 9px;
     }
-  }
 
-  async function selecionarEspecie(valor) {
-    setEspecieSelecionada(valor);
-    setPontosMapa([]);
-    await carregarPontos(valor);
-  }
+    .leaflet-popup-content-wrapper {
+      border-radius: 12px;
+    }
 
-  function tentarNovamente() {
-    inicializarMapa();
-  }
+    .popup-titulo {
+      font-weight: 700;
+      color: #542b25;
+      margin-bottom: 4px;
+    }
 
-  if (carregando) {
-    return (
-      <View style={styles.estado}>
-        <ActivityIndicator
-          size="large"
-          color={COLORS.coral}
-        />
+    .popup-texto {
+      color: #666;
+      font-size: 12px;
+    }
+  </style>
+</head>
 
-        <Text style={styles.estadoTexto}>
-          Localizando você...
-        </Text>
-      </View>
-    );
-  }
+<body>
+  <div id="map"></div>
 
-  if (erro || !regiaoMapa) {
-    return (
-      <View style={styles.estado}>
-        <Text style={styles.estadoTitulo}>
-          Não foi possível abrir o mapa
-        </Text>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-        <Text style={styles.estadoTexto}>
-          {erro || "Localização indisponível."}
-        </Text>
+  <script>
+    const centro = ${JSON.stringify(centro)};
+    const dados = ${marcadoresJson};
 
-        <View style={styles.tentar}>
-          <PrimaryButton
-            title="Tentar novamente"
-            onPress={tentarNovamente}
-          />
-        </View>
-      </View>
-    );
-  }
+    const mapa = L.map("map", {
+      zoomControl: true,
+      attributionControl: true
+    }).setView(centro, 12);
+
+    L.tileLayer(
+      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      {
+        maxZoom: 19,
+        attribution:
+          "&copy; OpenStreetMap contributors"
+      }
+    ).addTo(mapa);
+
+    dados.forEach((item) => {
+      const marcador = L.marker([
+        item.latitude,
+        item.longitude
+      ]).addTo(mapa);
+
+      marcador.bindPopup(
+        "<div class='popup-titulo'>" +
+        item.titulo +
+        "</div>" +
+        "<div class='popup-texto'>" +
+        item.descricao +
+        "</div>"
+      );
+    });
+
+    if (dados.length > 1) {
+      const limites = L.latLngBounds(
+        dados.map((item) => [
+          item.latitude,
+          item.longitude
+        ])
+      );
+
+      mapa.fitBounds(limites, {
+        padding: [30, 30]
+      });
+    }
+  </script>
+</body>
+</html>
+`;
+  }, [marcadores]);
 
   return (
-    <View style={styles.container}>
-      <ScrollView
-        style={styles.cabecalho}
-        contentContainerStyle={styles.cabecalhoConteudo}
-        showsVerticalScrollIndicator={false}
-      >
+    <View style={styles.tela}>
+      <View style={styles.cabecalho}>
         <BrandHeader
-          eyebrow="EXPLORAÇÃO"
+          eyebrow="RUBRA • GUARÁ"
           title="Mapa do mangue"
-          description="Veja a concentração provisória de registros próximos à sua localização."
+          description="Explore os pontos registrados na região."
         />
+      </View>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.seletor}
-        >
-          {ESPECIES.map((especie) => {
-            const ativo =
-              especieSelecionada === especie.valor;
-
-            return (
-              <Pressable
-                key={especie.valor}
-                onPress={() =>
-                  selecionarEspecie(especie.valor)
-                }
-                style={[
-                  styles.botaoEspecie,
-                  ativo && styles.botaoEspecieAtivo
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.textoEspecie,
-                    ativo &&
-                      styles.textoEspecieAtivo
-                  ]}
-                >
-                  {especie.nome}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-      </ScrollView>
-
-      <View style={styles.mapaWrapper}>
-        <MapView
-          style={styles.mapa}
-          region={regiaoMapa}
-          showsUserLocation
-          showsMyLocationButton
-        >
-          {pontosMapa.map((ponto, indice) => {
-            const raio = Math.min(
-              250,
-              Math.max(80, ponto.quantidade * 80)
-            );
-
-            return (
-              <Circle
-                key={`${ponto.latitude}-${ponto.longitude}-${indice}`}
-                center={{
-                  latitude: ponto.latitude,
-                  longitude: ponto.longitude
-                }}
-                radius={raio}
-                strokeColor="rgba(210, 82, 64, 0.85)"
-                fillColor="rgba(210, 82, 64, 0.32)"
+      <View style={styles.mapaCard}>
+        <WebView
+          originWhitelist={["*"]}
+          source={{ html: mapaHtml }}
+          style={styles.webview}
+          javaScriptEnabled
+          domStorageEnabled
+          startInLoadingState
+          renderLoading={() => (
+            <View style={styles.carregando}>
+              <ActivityIndicator
+                size="large"
+                color={COLORS.coral}
               />
+              <Text style={styles.carregandoTexto}>
+                Carregando mapa...
+              </Text>
+            </View>
+          )}
+          onError={(evento) => {
+            console.log(
+              "Erro ao carregar mapa:",
+              evento.nativeEvent
             );
-          })}
-        </MapView>
+          }}
+        />
+      </View>
 
-        <View style={styles.legenda}>
-          <View style={styles.legendaBolinha} />
-
-          <View>
-            <Text style={styles.legendaTitulo}>
-              Registros de {especieSelecionada}
-            </Text>
-
-            <Text style={styles.legendaTexto}>
-              Áreas agrupadas: {pontosMapa.length}
-            </Text>
-          </View>
-        </View>
+      <View style={styles.rodape}>
+        <Text style={styles.rodapeTexto}>
+          {marcadores.length}{" "}
+          {marcadores.length === 1
+            ? "registro encontrado"
+            : "registros encontrados"}
+        </Text>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  tela: {
     flex: 1,
-    backgroundColor: COLORS.pink
+    backgroundColor: COLORS.pink,
+    padding: SPACING.lg,
+    paddingTop: 48
   },
 
   cabecalho: {
-    flexGrow: 0,
-    maxHeight: 245
+    marginBottom: SPACING.md
   },
 
-  cabecalhoConteudo: {
-    padding: SPACING.lg,
-    paddingTop: 58,
-    paddingBottom: SPACING.sm
-  },
-
-  seletor: {
-    paddingVertical: SPACING.sm
-  },
-
-  botaoEspecie: {
-    borderWidth: 1.5,
-    borderColor: COLORS.green,
-    borderRadius: RADIUS.pill,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: 9,
-    marginRight: SPACING.sm,
-    backgroundColor: COLORS.white
-  },
-
-  botaoEspecieAtivo: {
-    backgroundColor: COLORS.green
-  },
-
-  textoEspecie: {
-    color: COLORS.green,
-    fontSize: 13,
-    fontWeight: "800"
-  },
-
-  textoEspecieAtivo: {
-    color: COLORS.white
-  },
-
-  mapaWrapper: {
+  mapaCard: {
     flex: 1,
-    marginTop: SPACING.sm,
+    minHeight: 360,
     overflow: "hidden",
-    borderTopLeftRadius: RADIUS.lg,
-    borderTopRightRadius: RADIUS.lg,
-    ...SHADOW.card
-  },
-
-  mapa: {
-    flex: 1
-  },
-
-  legenda: {
-    position: "absolute",
-    left: SPACING.md,
-    right: SPACING.md,
-    bottom: SPACING.md,
-    flexDirection: "row",
-    alignItems: "center",
+    borderRadius: RADIUS.lg,
     backgroundColor: COLORS.white,
-    borderRadius: RADIUS.md,
-    padding: SPACING.md,
     ...SHADOW.card
   },
 
-  legendaBolinha: {
-    width: 18,
-    height: 18,
-    borderRadius: 10,
-    backgroundColor: COLORS.coral,
-    marginRight: SPACING.md
-  },
-
-  legendaTitulo: {
-    color: COLORS.green,
-    fontSize: 14,
-    fontWeight: "800"
-  },
-
-  legendaTexto: {
-    color: COLORS.gray,
-    fontSize: 12,
-    marginTop: 3
-  },
-
-  estado: {
+  webview: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: SPACING.xl,
     backgroundColor: COLORS.pink
   },
 
-  estadoTitulo: {
-    color: COLORS.brown,
-    fontSize: 20,
-    fontWeight: "800",
-    textAlign: "center",
-    marginBottom: SPACING.sm
+  carregando: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: COLORS.pink
   },
 
-  estadoTexto: {
-    color: COLORS.gray,
-    fontSize: 15,
-    textAlign: "center",
-    lineHeight: 22
+  carregandoTexto: {
+    color: COLORS.green,
+    fontSize: 14,
+    fontWeight: "700",
+    marginTop: SPACING.sm
   },
 
-  tentar: {
-    width: "100%",
-    marginTop: SPACING.lg
+  rodape: {
+    alignItems: "center",
+    paddingVertical: SPACING.md
+  },
+
+  rodapeTexto: {
+    color: COLORS.green,
+    fontSize: 13,
+    fontWeight: "700"
   }
 });

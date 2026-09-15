@@ -7,7 +7,6 @@ import {
 } from "react-native";
 
 import { limparSessao } from "./src/api/auth";
-
 import BottomNavigation from "./src/components/BottomNavigation";
 import AboutScreen from "./src/screens/AboutScreen";
 import CaptureScreen from "./src/screens/CaptureScreen";
@@ -23,18 +22,48 @@ export default function App() {
   const [usuario, setUsuario] = useState(null);
   const [fotoPerfil, setFotoPerfil] = useState(null);
 
-  function entrar(dados) {
-    setUsuario(dados?.usuario || null);
-    setTela("inicio");
-  }
+  async function entrar(dados) {
+  const usuarioAtual =
+    dados?.usuario || dados || null;
+
+  setUsuario(usuarioAtual);
+
+  await carregarFotoPerfil(usuarioAtual);
+
+  setTela("inicio");
+}
 
   function sair() {
-    limparSessao();
-    setUsuario(null);
-    setFotoPerfil(null);
-    setTela("login");
+  limparSessao();
+  setUsuario(null);
+  setTela("login");
+}
+  function chaveFotoPerfil(usuario) {
+  const email =
+    usuario?.email || "usuario";
+
+  return `@rubra_guara_foto_${email}`;
+}
+
+async function carregarFotoPerfil(usuarioAtual) {
+  if (!usuarioAtual) {
+    return;
   }
 
+  try {
+    const fotoSalva =
+      await AsyncStorage.getItem(
+        chaveFotoPerfil(usuarioAtual)
+      );
+
+    setFotoPerfil(fotoSalva || null);
+  } catch (erro) {
+    console.log(
+      "Não foi possível carregar a foto:",
+      erro
+    );
+  }
+}
   function renderizarTela() {
     if (tela === "login") {
       return (

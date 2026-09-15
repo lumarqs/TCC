@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "Rubra Guará",
+    "slug": "rubra-guara",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFF1F1"
+    },
+    "android": {
+      "package": "com.rubraguara.monitoramento",
+      "versionCode": 1,
+      "permissions": [
+        "CAMERA",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
+    },
+    "extra": {
+      "eas": {
+        "projectId": "3e573498-5d84-4a49-8912-96e34a76e574"
+      }
+    },
+    "plugins": [
+      "expo-status-bar"
+    ]
+  }
+}
