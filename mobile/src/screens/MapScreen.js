@@ -23,15 +23,15 @@ export default function MapScreen({
     return observacoes
       .filter((item) => {
         const latitude = Number(
-          item.latitude ??
-          item.lat ??
-          item.localizacao?.latitude
+          item?.latitude ??
+          item?.lat ??
+          item?.localizacao?.latitude
         );
 
         const longitude = Number(
-          item.longitude ??
-          item.lng ??
-          item.localizacao?.longitude
+          item?.longitude ??
+          item?.lng ??
+          item?.localizacao?.longitude
         );
 
         return (
@@ -41,34 +41,36 @@ export default function MapScreen({
       })
       .map((item) => ({
         latitude: Number(
-          item.latitude ??
-          item.lat ??
-          item.localizacao.latitude
+          item?.latitude ??
+          item?.lat ??
+          item?.localizacao?.latitude
         ),
+
         longitude: Number(
-          item.longitude ??
-          item.lng ??
-          item.localizacao.longitude
+          item?.longitude ??
+          item?.lng ??
+          item?.localizacao?.longitude
         ),
+
         titulo:
-          item.especie ||
-          item.nome_especie ||
-          item.nome ||
+          item?.especie ||
+          item?.nome_especie ||
+          item?.nome ||
           "Observação",
+
         descricao:
-          item.descricao ||
-          item.observacao ||
+          item?.descricao ||
+          item?.observacao ||
           "Registro de biodiversidade"
       }));
   }, [observacoes]);
 
   const mapaHtml = useMemo(() => {
-    const centro = marcadores.length
-      ? [
-          marcadores[0].latitude,
-          marcadores[0].longitude
-        ]
-      : [-1.4558, -48.4902];
+    // Localização fixa na região de Cubatão/Bertioga.
+    const centroFixo = [
+      -23.8519,
+      -46.1417
+    ];
 
     const marcadoresJson =
       JSON.stringify(marcadores);
@@ -78,6 +80,7 @@ export default function MapScreen({
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
+
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
@@ -108,9 +111,9 @@ export default function MapScreen({
     }
 
     .popup-titulo {
-      font-weight: 700;
-      color: #542b25;
       margin-bottom: 4px;
+      color: #542b25;
+      font-weight: 700;
     }
 
     .popup-texto {
@@ -123,16 +126,21 @@ export default function MapScreen({
 <body>
   <div id="map"></div>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+  </script>
+  <script
+  src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js">
+</script>
 
   <script>
-    const centro = ${JSON.stringify(centro)};
+    const centro = ${JSON.stringify(centroFixo)};
     const dados = ${marcadoresJson};
 
     const mapa = L.map("map", {
       zoomControl: true,
       attributionControl: true
-    }).setView(centro, 12);
+    }).setView(centro, 13);
 
     L.tileLayer(
       "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -143,34 +151,25 @@ export default function MapScreen({
       }
     ).addTo(mapa);
 
-    dados.forEach((item) => {
-      const marcador = L.marker([
-        item.latitude,
-        item.longitude
-      ]).addTo(mapa);
+    const pontosCalor = dados.map((item) => [
+  item.latitude,
+  item.longitude,
+  item.peso || 1
+]);
 
-      marcador.bindPopup(
-        "<div class='popup-titulo'>" +
-        item.titulo +
-        "</div>" +
-        "<div class='popup-texto'>" +
-        item.descricao +
-        "</div>"
-      );
-    });
-
-    if (dados.length > 1) {
-      const limites = L.latLngBounds(
-        dados.map((item) => [
-          item.latitude,
-          item.longitude
-        ])
-      );
-
-      mapa.fitBounds(limites, {
-        padding: [30, 30]
-      });
-    }
+L.heatLayer(pontosCalor, {
+  radius: 35,
+  blur: 25,
+  maxZoom: 17,
+  max: 1.0,
+  minOpacity: 0.35,
+  gradient: {
+    0.2: "#38a169",
+    0.45: "#f6e05e",
+    0.7: "#ed8936",
+    1.0: "#e53e3e"
+  }
+}).addTo(mapa);
   </script>
 </body>
 </html>
@@ -201,6 +200,7 @@ export default function MapScreen({
                 size="large"
                 color={COLORS.coral}
               />
+
               <Text style={styles.carregandoTexto}>
                 Carregando mapa...
               </Text>

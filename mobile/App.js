@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useState } from "react";
 import {
   SafeAreaView,
@@ -17,53 +18,90 @@ import ProfileScreen from "./src/screens/ProfileScreen";
 import SignupScreen from "./src/screens/SignupScreen";
 import { COLORS } from "./src/theme";
 
+
+const observacoesTeste = [
+  {
+    id: "teste-1",
+    latitude: -23.8519,
+    longitude: -46.1417,
+    peso: 23,
+    especie: "Guará Vermelho",
+    descricao: "Observação simulada no manguezal."
+  },
+  {
+    id: "teste-2",
+    latitude: -23.8542,
+    longitude: -46.1384,
+    peso: 10,
+    especie: "Martim-Pescador",
+    descricao: "Ave observada próxima ao rio."
+  },
+  {
+    id: "teste-3",
+    latitude: -23.8487,
+    longitude: -46.1451,
+    peso: 58,
+    especie: "Mangue Maçã",
+    descricao: "Vegetação característica do manguezal."
+  }
+];
+
 export default function App() {
   const [tela, setTela] = useState("login");
   const [usuario, setUsuario] = useState(null);
   const [fotoPerfil, setFotoPerfil] = useState(null);
 
-  async function entrar(dados) {
-  const usuarioAtual =
-    dados?.usuario || dados || null;
+  function chaveFotoPerfil(usuarioAtual) {
+    const email =
+      usuarioAtual?.email || "usuario";
 
-  setUsuario(usuarioAtual);
-
-  await carregarFotoPerfil(usuarioAtual);
-
-  setTela("inicio");
-}
-
-  function sair() {
-  limparSessao();
-  setUsuario(null);
-  setTela("login");
-}
-  function chaveFotoPerfil(usuario) {
-  const email =
-    usuario?.email || "usuario";
-
-  return `@rubra_guara_foto_${email}`;
-}
-
-async function carregarFotoPerfil(usuarioAtual) {
-  if (!usuarioAtual) {
-    return;
+    return `@rubra_guara_foto_${email}`;
   }
 
-  try {
-    const fotoSalva =
-      await AsyncStorage.getItem(
-        chaveFotoPerfil(usuarioAtual)
+  async function carregarFotoPerfil(usuarioAtual) {
+    if (!usuarioAtual) {
+      setFotoPerfil(null);
+      return;
+    }
+
+    try {
+      const fotoSalva =
+        await AsyncStorage.getItem(
+          chaveFotoPerfil(usuarioAtual)
+        );
+
+      setFotoPerfil(fotoSalva || null);
+    } catch (erro) {
+      console.log(
+        "Não foi possível carregar a foto:",
+        erro
       );
 
-    setFotoPerfil(fotoSalva || null);
-  } catch (erro) {
-    console.log(
-      "Não foi possível carregar a foto:",
-      erro
-    );
+      setFotoPerfil(null);
+    }
   }
-}
+
+  async function entrar(dados) {
+    const usuarioAtual =
+      dados?.usuario || dados || null;
+
+    setUsuario(usuarioAtual);
+
+    await carregarFotoPerfil(usuarioAtual);
+
+    setTela("inicio");
+  }
+
+  function sair() {
+    limparSessao();
+
+    setUsuario(null);
+    setTela("login");
+
+    // A foto não é apagada do AsyncStorage.
+    // Ela reaparecerá quando o usuário entrar novamente.
+  }
+
   function renderizarTela() {
     if (tela === "login") {
       return (
@@ -86,6 +124,7 @@ async function carregarFotoPerfil(usuarioAtual) {
       return (
         <MapScreen
           onNavigate={setTela}
+          observacoes={observacoesTeste}
         />
       );
     }
