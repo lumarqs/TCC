@@ -1,6 +1,22 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { WORKER_URL } from "../config";
 
+// Chave onde a sessão fica salva para sobreviver a recarregamentos.
+const CHAVE_SESSAO = "rubra_sessao_token";
+
 let tokenAtual = null;
+
+// Ao carregar o app, restaura a sessão salva (se existir).
+(async function restaurarSessao() {
+  try {
+    const salvo = await AsyncStorage.getItem(CHAVE_SESSAO);
+    if (salvo) {
+      tokenAtual = salvo;
+    }
+  } catch {
+    // Armazenamento indisponível: segue sem sessão.
+  }
+})();
 
 function obterMensagemErro(dados) {
   return (
@@ -109,6 +125,10 @@ export function obterToken() {
 
 export function limparSessao() {
   tokenAtual = null;
+
+  AsyncStorage.removeItem(CHAVE_SESSAO).catch(() => {
+    // Armazenamento indisponível.
+  });
 }
 
 export function cadastrarUsuario({
@@ -145,6 +165,13 @@ export async function fazerLogin({
   }
 
   tokenAtual = dados.token;
+
+  // Salva a sessão: agora recarregar a página não desloga mais.
+  try {
+    await AsyncStorage.setItem(CHAVE_SESSAO, dados.token);
+  } catch {
+    // Sem armazenamento: a sessão vale só nesta execução.
+  }
 
   return dados;
 }
