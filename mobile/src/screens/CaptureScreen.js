@@ -1,26 +1,90 @@
-import { useState } from "react";
-import {
-  View,
-  Text,
-  Image,
-  StyleSheet,
-  Alert,
-  ScrollView,
-  ActivityIndicator
-} from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
-
+import { useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View
+} from "react-native";
 import BrandHeader from "../components/BrandHeader";
 import PrimaryButton from "../components/PrimaryButton";
+import { WORKER_URL } from "../config";
 import {
   COLORS,
   RADIUS,
-  SPACING,
   SHADOW,
+  SPACING,
   TYPOGRAPHY
 } from "../theme";
-import { WORKER_URL } from "../config";
+
+// Tenta achar o token salvo pelo login nas chaves mais comuns.
+const CHAVES_TOKEN = [
+  "token",
+  "authToken",
+  "auth_token",
+  "sessao",
+  "usuario"
+];
+
+async function obterTokenSalvo() {
+  for (const chave of CHAVES_TOKEN) {
+    try {
+      const bruto = await AsyncStorage.getItem(chave);
+      if (!bruto) {
+        continue;
+      }
+      try {
+        const dados = JSON.parse(bruto);
+        if (
+          typeof dados?.token === "string" &&
+          dados.token.length > 10
+        ) {
+          return dados.token;
+        }
+        if (typeof dados === "string" && dados.length > 20) {
+          return dados;
+        }
+      } catch {
+        // Não era JSON: pode ser o token cru.
+        if (bruto.length > 20 && bruto.includes(".")) {
+          return bruto;
+        }
+      }
+    } catch {
+      // Chave inexistente: segue para a próxima.
+    }
+  }
+  return null;
+}
+
+function comLimiteDeTempo(promessa, limiteMs) {
+  return Promise.race([
+    promessa,
+    new Promise((_, rejeitar) =>
+      setTimeout(
+        () =>
+          rejeitar(
+            new Error("A localização demorou demais para responder.")
+          ),
+        limiteMs
+      )
+    ),
+  ]);
+}
+
+function formatarEspecie(nome) {
+  const texto = String(nome || "").trim();
+  if (!texto) {
+    return "";
+  }
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
 
 export default function CaptureScreen({
   onNavigate
@@ -30,7 +94,6 @@ export default function CaptureScreen({
     useState(null);
   const [respostaServidor, setRespostaServidor] =
     useState(null);
-
   const [carregandoFoto, setCarregandoFoto] =
     useState(false);
   const [enviando, setEnviando] =
@@ -41,22 +104,45 @@ export default function CaptureScreen({
     setFoto(null);
     setLocalizacao(null);
     setRespostaServidor(null);
-
     try {
-      const permissaoCamera =
-        await ImagePicker.requestCameraPermissionsAsync();
-
-      if (!permissaoCamera.granted) {
-        Alert.alert(
-          "Permissão necessária",
-          "Autorize o acesso à câmera."
-        );
+      let resultadoFoto;
+      if (Platform.OS === "web") {
+        // No navegador, o seletor PRECISA abrir no toque direto,
+        // antes de qualquer espera, senão o Chrome bloqueia o diálogo.
+        resultadoFoto =
+          await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ["images"],
+            quality: 0.8,
+            base64: true,
+            allowsEditing: false
+          });
+      } else {
+        const permissaoCamera =
+          await ImagePicker.requestCameraPermissionsAsync();
+        if (!permissaoCamera.granted) {
+          Alert.alert(
+            "Permissão necessária",
+            "Autorize o acesso à câmera."
+          );
+          return;
+        }
+        resultadoFoto =
+          await ImagePicker.launchCameraAsync({
+            mediaTypes: ["images"],
+            quality: 0.8,
+            base64: true,
+            allowsEditing: false
+          });
+      }
+      if (resultadoFoto.canceled) {
         return;
       }
-
+      const fotoCapturada =
+        resultadoFoto.assets[0];
+      // Localização depois da foto, com limite de tempo
+      // (no PC o GPS pode demorar muito).
       const permissaoLocalizacao =
         await Location.requestForegroundPermissionsAsync();
-
       if (permissaoLocalizacao.status !== "granted") {
         Alert.alert(
           "Permissão necessária",
@@ -64,42 +150,35 @@ export default function CaptureScreen({
         );
         return;
       }
-
-      const resultadoFoto =
-        await ImagePicker.launchCameraAsync({
-          mediaTypes: ["images"],
-          quality: 0.8,
-          allowsEditing: false
-        });
-
-      if (resultadoFoto.canceled) {
-        return;
-      }
-
-      const fotoCapturada =
-        resultadoFoto.assets[0];
-
-      const posicao =
-        await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.High
-        });
-
+      const precisao =
+        Platform.OS === "web"
+          ? Location.Accuracy.Balanced
+          : Location.Accuracy.High;
+      const posicao = await comLimiteDeTempo(
+        Location.getCurrentPositionAsync({
+          accuracy: precisao
+        }),
+        20000
+      );
       setFoto(fotoCapturada);
-
       setLocalizacao({
         latitude: posicao.coords.latitude,
         longitude: posicao.coords.longitude,
         precisao: posicao.coords.accuracy
       });
-
       Alert.alert(
         "Observação pronta",
         "Foto e localização foram capturadas."
       );
     } catch (error) {
+      const mensagem = error instanceof Error
+        ? error.message
+        : "";
       Alert.alert(
         "Erro",
-        "Não foi possível capturar a observação."
+        mensagem.includes("demorou")
+          ? "Não foi possível obter sua localização. Autorize o acesso no navegador e tente de novo."
+          : "Não foi possível capturar a observação."
       );
     } finally {
       setCarregandoFoto(false);
@@ -114,59 +193,57 @@ export default function CaptureScreen({
       );
       return;
     }
-
+    const token = await obterTokenSalvo();
+    if (!token) {
+      Alert.alert(
+        "Sessão necessária",
+        "Faça login no aplicativo antes de enviar observações."
+      );
+      return;
+    }
+    if (!foto.base64) {
+      Alert.alert(
+        "Foto inválida",
+        "Não conseguimos ler os dados da foto. Tente novamente."
+      );
+      return;
+    }
+    if (foto.base64.length > 4500000) {
+      Alert.alert(
+        "Foto muito grande",
+        "Escolha outra foto ou tire novamente."
+      );
+      return;
+    }
     setEnviando(true);
     setRespostaServidor(null);
-
     try {
-      const formData = new FormData();
-
-      formData.append("image", {
-        uri: foto.uri,
-        name: foto.fileName || "observacao.jpg",
-        type: foto.mimeType || "image/jpeg"
-      });
-
-      formData.append(
-        "latitude",
-        String(localizacao.latitude)
+      const resposta = await fetch(
+        `${WORKER_URL}/analisar-imagem`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            imageBase64: foto.base64,
+            mimeType: foto.mimeType || "image/jpeg",
+            latitude: localizacao.latitude,
+            longitude: localizacao.longitude,
+            precisao_metros: localizacao.precisao,
+            regiao: "mangue-principal",
+            capturado_em: new Date().toISOString()
+          })
+        }
       );
-
-      formData.append(
-        "longitude",
-        String(localizacao.longitude)
-      );
-
-      formData.append(
-        "precisao_metros",
-        String(localizacao.precisao || "")
-      );
-
-      formData.append(
-        "regiao",
-        "mangue-principal"
-      );
-
-      formData.append(
-        "capturado_em",
-        new Date().toISOString()
-      );
-
-      const resposta = await fetch(WORKER_URL, {
-        method: "POST",
-        body: formData
-      });
-
       const dados = await resposta.json();
-
       if (!resposta.ok || !dados.sucesso) {
         throw new Error(
           dados.erro || "O Worker recusou a observação."
         );
       }
-
       setRespostaServidor(dados);
-
       Alert.alert(
         "Observação enviada",
         "Os dados foram salvos no banco."
@@ -191,7 +268,6 @@ export default function CaptureScreen({
 
   const deteccao =
     respostaServidor?.deteccao;
-
   return (
     <ScrollView
       contentContainerStyle={styles.container}
@@ -202,21 +278,17 @@ export default function CaptureScreen({
         title="Registre uma espécie"
         description="Fotografe o ambiente e salve a localização para contribuir com o monitoramento."
       />
-
       <View style={styles.infoCard}>
         <View style={styles.infoDot} />
-
         <View style={styles.infoContent}>
           <Text style={styles.infoTitle}>
             Como funciona?
           </Text>
-
           <Text style={styles.infoText}>
             Tire uma foto. O aplicativo captura sua localização e envia os dados para análise.
           </Text>
         </View>
       </View>
-
       <PrimaryButton
         title={
           carregandoFoto
@@ -227,20 +299,17 @@ export default function CaptureScreen({
         loading={carregandoFoto}
         disabled={enviando}
       />
-
       {foto && (
         <View style={styles.previewCard}>
           <Image
             source={{ uri: foto.uri }}
             style={styles.imagem}
           />
-
           {localizacao && (
             <View style={styles.localizacaoBox}>
               <Text style={styles.localizacaoTitulo}>
                 Localização capturada
               </Text>
-
               <Text style={styles.localizacaoTexto}>
                 Precisão aproximada:{" "}
                 {localizacao.precisao
@@ -251,7 +320,6 @@ export default function CaptureScreen({
           )}
         </View>
       )}
-
       {foto && localizacao && !respostaServidor && (
         <View style={styles.botaoSecundario}>
           <PrimaryButton
@@ -266,7 +334,6 @@ export default function CaptureScreen({
           />
         </View>
       )}
-
       {enviando && (
         <ActivityIndicator
           size="large"
@@ -274,22 +341,25 @@ export default function CaptureScreen({
           style={styles.carregando}
         />
       )}
-
       {deteccao && (
         <View style={styles.resultadoCard}>
           <Text style={styles.resultadoEyebrow}>
             RESULTADO DA ANÁLISE
           </Text>
-
           <Text style={styles.especie}>
-            {deteccao.especie || "Não identificado"}
+            {deteccao.especie
+              ? formatarEspecie(deteccao.especie)
+              : "Não identificado"}
           </Text>
-
+          {deteccao.nome_cientifico ? (
+            <Text style={styles.cientifico}>
+              {deteccao.nome_cientifico}
+            </Text>
+          ) : null}
           <View style={styles.resultadoLinha}>
             <Text style={styles.resultadoLabel}>
               Confiança
             </Text>
-
             <Text style={styles.resultadoValor}>
               {(
                 Number(deteccao.confianca || 0) * 100
@@ -297,12 +367,10 @@ export default function CaptureScreen({
               %
             </Text>
           </View>
-
           <View style={styles.resultadoLinha}>
             <Text style={styles.resultadoLabel}>
               Status
             </Text>
-
             <Text
               style={[
                 styles.resultadoValor,
@@ -316,7 +384,6 @@ export default function CaptureScreen({
                 : "Não reconhecida"}
             </Text>
           </View>
-
           {!deteccao.especie_aceita && (
             <Text style={styles.aviso}>
               A imagem foi salva, mas a espécie não foi aceita com segurança.
@@ -324,7 +391,6 @@ export default function CaptureScreen({
           )}
         </View>
       )}
-
       {respostaServidor && (
         <View style={styles.botaoSecundario}>
           <PrimaryButton
@@ -334,12 +400,10 @@ export default function CaptureScreen({
           />
         </View>
       )}
-
       <View style={styles.linkArea}>
         <Text style={styles.linkTexto}>
           Quer visualizar os registros?
         </Text>
-
         <PrimaryButton
           title="Abrir mapa"
           onPress={() => onNavigate("mapa")}
@@ -358,7 +422,6 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingBottom: SPACING.xxl
   },
-
   infoCard: {
     flexDirection: "row",
     alignItems: "center",
@@ -368,7 +431,6 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.lg,
     ...SHADOW.card
   },
-
   infoDot: {
     width: 12,
     height: 12,
@@ -376,24 +438,20 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.blueGray,
     marginRight: SPACING.md
   },
-
   infoContent: {
     flex: 1
   },
-
   infoTitle: {
     color: COLORS.green,
     fontSize: 15,
     fontWeight: "800",
     marginBottom: 4
   },
-
   infoText: {
     color: COLORS.gray,
     fontSize: 13,
     lineHeight: 19
   },
-
   previewCard: {
     backgroundColor: COLORS.white,
     borderRadius: RADIUS.lg,
@@ -401,37 +459,30 @@ const styles = StyleSheet.create({
     marginTop: SPACING.lg,
     ...SHADOW.card
   },
-
   imagem: {
     width: "100%",
     height: 280,
     resizeMode: "cover"
   },
-
   localizacaoBox: {
     padding: SPACING.md,
     backgroundColor: COLORS.cream
   },
-
   localizacaoTitulo: {
     color: COLORS.green,
     fontWeight: "800",
     marginBottom: 4
   },
-
   localizacaoTexto: {
     color: COLORS.gray,
     fontSize: 13
   },
-
   botaoSecundario: {
     marginTop: SPACING.md
   },
-
   carregando: {
     marginTop: SPACING.md
   },
-
   resultadoCard: {
     backgroundColor: COLORS.green,
     borderRadius: RADIUS.lg,
@@ -439,22 +490,25 @@ const styles = StyleSheet.create({
     marginTop: SPACING.lg,
     ...SHADOW.card
   },
-
   resultadoEyebrow: {
     color: COLORS.pink,
     fontSize: 11,
     letterSpacing: 2,
     fontWeight: "800"
   },
-
   especie: {
     color: COLORS.white,
     fontSize: 27,
     fontWeight: "800",
     marginTop: SPACING.sm,
+    marginBottom: 4
+  },
+  cientifico: {
+    color: "rgba(255,255,255,0.85)",
+    fontSize: 15,
+    fontStyle: "italic",
     marginBottom: SPACING.lg
   },
-
   resultadoLinha: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -462,40 +516,33 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "rgba(255,255,255,0.18)"
   },
-
   resultadoLabel: {
     color: COLORS.pink,
     fontSize: 14
   },
-
   resultadoValor: {
     color: COLORS.white,
     fontSize: 14,
     fontWeight: "800"
   },
-
   statusOk: {
     color: "#C8E6C9"
   },
-
   statusPendente: {
     color: "#FFD6A5"
   },
-
   aviso: {
     color: "#FFD6A5",
     fontSize: 13,
     lineHeight: 19,
     marginTop: SPACING.md
   },
-
   linkArea: {
     marginTop: SPACING.xl,
     paddingTop: SPACING.lg,
     borderTopWidth: 1,
     borderTopColor: COLORS.border
   },
-
   linkTexto: {
     ...TYPOGRAPHY.body,
     textAlign: "center",
