@@ -98,8 +98,20 @@ export default function CaptureScreen({
     useState(false);
   const [enviando, setEnviando] =
     useState(false);
+  const [aviso, setAviso] = useState(null);
+
+  // Alert.alert não existe no navegador: no site o aviso
+  // aparece como banner na própria tela; no app usa o Alert.
+  function avisar(titulo, texto) {
+    if (Platform.OS === "web") {
+      setAviso({ titulo, texto });
+    } else {
+      Alert.alert(titulo, texto);
+    }
+  }
 
   async function capturarObservacao() {
+    setAviso(null);
     setCarregandoFoto(true);
     setFoto(null);
     setLocalizacao(null);
@@ -120,7 +132,7 @@ export default function CaptureScreen({
         const permissaoCamera =
           await ImagePicker.requestCameraPermissionsAsync();
         if (!permissaoCamera.granted) {
-          Alert.alert(
+          avisar(
             "Permissão necessária",
             "Autorize o acesso à câmera."
           );
@@ -144,7 +156,7 @@ export default function CaptureScreen({
       const permissaoLocalizacao =
         await Location.requestForegroundPermissionsAsync();
       if (permissaoLocalizacao.status !== "granted") {
-        Alert.alert(
+        avisar(
           "Permissão necessária",
           "Autorize o acesso à localização."
         );
@@ -166,15 +178,11 @@ export default function CaptureScreen({
         longitude: posicao.coords.longitude,
         precisao: posicao.coords.accuracy
       });
-      Alert.alert(
-        "Observação pronta",
-        "Foto e localização foram capturadas."
-      );
     } catch (error) {
       const mensagem = error instanceof Error
         ? error.message
         : "";
-      Alert.alert(
+      avisar(
         "Erro",
         mensagem.includes("demorou")
           ? "Não foi possível obter sua localização. Autorize o acesso no navegador e tente de novo."
@@ -186,38 +194,39 @@ export default function CaptureScreen({
   }
 
   async function enviarObservacao() {
+    setAviso(null);
     if (!foto || !localizacao) {
-      Alert.alert(
+      avisar(
         "Observação incompleta",
         "Capture uma foto antes de enviar."
       );
       return;
     }
-    const token = await obterTokenSalvo();
-    if (!token) {
-      Alert.alert(
-        "Sessão necessária",
-        "Faça login no aplicativo antes de enviar observações."
-      );
-      return;
-    }
-    if (!foto.base64) {
-      Alert.alert(
-        "Foto inválida",
-        "Não conseguimos ler os dados da foto. Tente novamente."
-      );
-      return;
-    }
-    if (foto.base64.length > 4500000) {
-      Alert.alert(
-        "Foto muito grande",
-        "Escolha outra foto ou tire novamente."
-      );
-      return;
-    }
     setEnviando(true);
-    setRespostaServidor(null);
     try {
+      const token = await obterTokenSalvo();
+      if (!token) {
+        avisar(
+          "Sessão necessária",
+          "Faça login no site antes de enviar observações. Volte à tela Início e entre com sua conta."
+        );
+        return;
+      }
+      if (!foto.base64) {
+        avisar(
+          "Foto inválida",
+          "Não conseguimos ler os dados da foto. Tente novamente."
+        );
+        return;
+      }
+      if (foto.base64.length > 4500000) {
+        avisar(
+          "Foto muito grande",
+          "Escolha outra foto ou tire novamente."
+        );
+        return;
+      }
+      setRespostaServidor(null);
       const resposta = await fetch(
         `${WORKER_URL}/analisar-imagem`,
         {
@@ -244,12 +253,8 @@ export default function CaptureScreen({
         );
       }
       setRespostaServidor(dados);
-      Alert.alert(
-        "Observação enviada",
-        "Os dados foram salvos no banco."
-      );
     } catch (error) {
-      Alert.alert(
+      avisar(
         "Erro no envio",
         error instanceof Error
           ? error.message
@@ -264,6 +269,7 @@ export default function CaptureScreen({
     setFoto(null);
     setLocalizacao(null);
     setRespostaServidor(null);
+    setAviso(null);
   }
 
   const deteccao =
@@ -278,6 +284,22 @@ export default function CaptureScreen({
         title="Registre uma espécie"
         description="Fotografe o ambiente e salve a localização para contribuir com o monitoramento."
       />
+      {aviso && (
+        <View style={styles.avisoCard}>
+          <Text style={styles.avisoTitulo}>
+            {aviso.titulo}
+          </Text>
+          <Text style={styles.avisoTexto}>
+            {aviso.texto}
+          </Text>
+          <Text
+            style={styles.avisoFechar}
+            onPress={() => setAviso(null)}
+          >
+            Fechar
+          </Text>
+        </View>
+      )}
       <View style={styles.infoCard}>
         <View style={styles.infoDot} />
         <View style={styles.infoContent}>
@@ -385,7 +407,7 @@ export default function CaptureScreen({
             </Text>
           </View>
           {!deteccao.especie_aceita && (
-            <Text style={styles.aviso}>
+            <Text style={styles.avisoInterno}>
               A imagem foi salva, mas a espécie não foi aceita com segurança.
             </Text>
           )}
@@ -421,6 +443,30 @@ const styles = StyleSheet.create({
     padding: SPACING.lg,
     paddingTop: 60,
     paddingBottom: SPACING.xxl
+  },
+  avisoCard: {
+    backgroundColor: "#B3261E",
+    borderRadius: RADIUS.md,
+    padding: SPACING.md,
+    marginBottom: SPACING.lg
+  },
+  avisoTitulo: {
+    color: "#FFFFFF",
+    fontWeight: "800",
+    fontSize: 15,
+    marginBottom: 4
+  },
+  avisoTexto: {
+    color: "rgba(255,255,255,0.92)",
+    fontSize: 13,
+    lineHeight: 19
+  },
+  avisoFechar: {
+    color: "#FFFFFF",
+    fontWeight: "800",
+    fontSize: 13,
+    marginTop: SPACING.sm,
+    textDecorationLine: "underline"
   },
   infoCard: {
     flexDirection: "row",
@@ -531,7 +577,7 @@ const styles = StyleSheet.create({
   statusPendente: {
     color: "#FFD6A5"
   },
-  aviso: {
+  avisoInterno: {
     color: "#FFD6A5",
     fontSize: 13,
     lineHeight: 19,
