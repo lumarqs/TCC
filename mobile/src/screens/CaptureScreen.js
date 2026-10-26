@@ -23,41 +23,102 @@ import {
   TYPOGRAPHY
 } from "../theme";
 
-// Tenta achar o token salvo pelo login nas chaves mais comuns.
-const CHAVES_TOKEN = [
-  "token",
-  "authToken",
-  "auth_token",
-  "sessao",
-  "usuario"
-];
+function pareceToken(valor) {
+  if (typeof valor !== "string") {
+    return false;
+  }
+  const partes = valor.split(".");
+  if (partes.length !== 2) {
+    return false;
+  }
+  return (
+    partes[0].length >= 40 &&
+    partes[1].length >= 20 &&
+    /^[A-Za-z0-9_-]+$/.test(partes[0]) &&
+    /^[A-Za-z0-9_-]+$/.test(partes[1])
+  );
+}
 
-async function obterTokenSalvo() {
-  for (const chave of CHAVES_TOKEN) {
-    try {
-      const bruto = await AsyncStorage.getItem(chave);
-      if (!bruto) {
-        continue;
+function procurarTokenEmValor(valor, profundidade = 0) {
+  if (profundidade > 4) {
+    return null;
+  }
+  if (typeof valor === "string") {
+    return pareceToken(valor) ? valor : null;
+  }
+  if (Array.isArray(valor)) {
+    for (const item of valor) {
+      const achado = procurarTokenEmValor(item, profundidade + 1);
+      if (achado) {
+        return achado;
       }
+    }
+    return null;
+  }
+  if (valor && typeof valor === "object") {
+    if (typeof valor.token === "string" && valor.token.length > 10) {
+      return valor.token;
+    }
+    for (const chave in valor) {
+      const achado = procurarTokenEmValor(valor[chave], profundidade + 1);
+      if (achado) {
+        return achado;
+      }
+    }
+  }
+  return null;
+}
+
+// Varre TODAS as chaves salvas e acha o token pelo formato dele,
+// sem depender do nome que a tela de login usou para salvar.
+async function obterTokenSalvo() {
+  try {
+    const chaves = await AsyncStorage.getAllKeys();
+    for (const chave of chaves) {
       try {
-        const dados = JSON.parse(bruto);
-        if (
-          typeof dados?.token === "string" &&
-          dados.token.length > 10
-        ) {
-          return dados.token;
+        const bruto = await AsyncStorage.getItem(chave);
+        if (!bruto) {
+          continue;
         }
-        if (typeof dados === "string" && dados.length > 20) {
-          return dados;
-        }
-      } catch {
-        // Não era JSON: pode ser o token cru.
-        if (bruto.length > 20 && bruto.includes(".")) {
+        if (pareceToken(bruto)) {
           return bruto;
         }
+        try {
+          const dados = JSON.parse(bruto);
+          const achado = procurarTokenEmValor(dados);
+          if (achado) {
+            return achado;
+          }
+        } catch {
+          // Não era JSON.
+        }
+      } catch {
+        // Chave ilegível: segue para a próxima.
       }
-    } catch {
-      // Chave inexistente: segue para a próxima.
+    }
+  } catch {
+    // Varredura indisponível: tenta as chaves clássicas.
+    for (const chave of ["token", "authToken", "auth_token", "sessao", "usuario"]) {
+      try {
+        const bruto = await AsyncStorage.getItem(chave);
+        if (!bruto) {
+          continue;
+        }
+        if (pareceToken(bruto)) {
+          return bruto;
+        }
+        try {
+          const dados = JSON.parse(bruto);
+          const achado = procurarTokenEmValor(dados);
+          if (achado) {
+            return achado;
+          }
+        } catch {
+          // Não era JSON.
+        }
+      } catch {
+        // Chave inexistente.
+      }
     }
   }
   return null;
