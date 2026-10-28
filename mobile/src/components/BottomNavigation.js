@@ -28,6 +28,11 @@ const ITEMS = [
     icon: "◎"
   },
   {
+    id: "meumangue",
+    label: "Meu Mangue",
+    icon: "🌿"
+  },
+  {
     id: "perfil",
     label: "Perfil",
     icon: "●"
@@ -115,7 +120,7 @@ const styles = StyleSheet.create({
   },
 
   label: {
-    fontSize: 10,
+    fontSize: 9,
     marginTop: 3,
     color: COLORS.gray
   },

@@ -266,7 +266,7 @@ export default function CaptureScreen({
     }
     setEnviando(true);
     try {
-      const token = obterToken() || (await obterTokenSalvo());
+        const token = obterToken() || (await obterTokenSalvo());
       if (!token) {
         avisar(
           "Sessão necessária",
@@ -468,6 +468,16 @@ export default function CaptureScreen({
                 : "Não reconhecida"}
             </Text>
           </View>
+                    {respostaServidor?.pontos_ganhos > 0 && (
+            <View style={styles.resultadoLinha}>
+              <Text style={styles.resultadoLabel}>
+                Pontos ganhos
+              </Text>
+              <Text style={styles.statusOk}>
+                +{respostaServidor.pontos_ganhos}
+              </Text>
+            </View>
+          )}
           {!deteccao.especie_aceita && (
             <Text style={styles.avisoInterno}>
               A imagem foi salva, mas a espécie não foi aceita com segurança.

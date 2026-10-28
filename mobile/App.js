@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   SafeAreaView,
   StatusBar,
@@ -7,13 +7,18 @@ import {
   View
 } from "react-native";
 
-import { limparSessao } from "./src/api/auth";
+import {
+  limparSessao,
+  obterMeuPerfil,
+  obterToken
+} from "./src/api/auth";
 import BottomNavigation from "./src/components/BottomNavigation";
 import AboutScreen from "./src/screens/AboutScreen";
 import CaptureScreen from "./src/screens/CaptureScreen";
 import HomeScreen from "./src/screens/HomeScreen";
 import LoginScreen from "./src/screens/LoginScreen";
 import MapScreen from "./src/screens/MapScreen";
+import MeuMangueScreen from "./src/screens/MeuMangueScreen";
 import ProfileScreen from "./src/screens/ProfileScreen";
 import SignupScreen from "./src/screens/SignupScreen";
 import { COLORS } from "./src/theme";
@@ -50,6 +55,43 @@ export default function App() {
   const [tela, setTela] = useState("login");
   const [usuario, setUsuario] = useState(null);
   const [fotoPerfil, setFotoPerfil] = useState(null);
+
+  // Ao abrir o app, verifica se existe uma sessão salva.
+  // Se houver, valida com o servidor e entra direto —
+  // sem passar pela tela de login.
+  useEffect(() => {
+    let ativo = true;
+    (async () => {
+      // Aguarda o auth.js restaurar o token do armazenamento.
+      for (let tentativa = 0; tentativa < 5; tentativa++) {
+        if (!ativo) {
+          return;
+        }
+        if (obterToken()) {
+          break;
+        }
+        await new Promise((resolver) =>
+          setTimeout(resolver, 200)
+        );
+      }
+      if (!obterToken()) {
+        // Sem sessão salva: permanece no login.
+        return;
+      }
+      try {
+        const perfil = await obterMeuPerfil();
+        if (ativo) {
+          entrar(perfil);
+        }
+      } catch {
+        // Token inválido ou servidor inacessível:
+        // permanece no login.
+      }
+    })();
+    return () => {
+      ativo = false;
+    };
+  }, []);
 
   function chaveFotoPerfil(usuarioAtual) {
     const email =
@@ -143,6 +185,14 @@ export default function App() {
         <CaptureScreen
           onNavigate={setTela}
           usuario={usuario}
+        />
+      );
+    }
+
+    if (tela === "meumangue") {
+      return (
+        <MeuMangueScreen
+          onNavigate={setTela}
         />
       );
     }
