@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import BrandHeader from "../components/BrandHeader";
 import PrimaryButton from "../components/PrimaryButton";
+import { obterToken } from "../api/auth";
 import { WORKER_URL } from "../config";
 import {
   COLORS,
@@ -265,7 +266,7 @@ export default function CaptureScreen({
     }
     setEnviando(true);
     try {
-      const token = await obterTokenSalvo();
+      const token = obterToken() || (await obterTokenSalvo());
       if (!token) {
         avisar(
           "Sessão necessária",
