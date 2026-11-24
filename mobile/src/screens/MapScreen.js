@@ -24,6 +24,19 @@ if (Platform.OS !== "web") {
   WebView = require("react-native-webview").WebView;
 }
 
+const NOMES_ESPECIES = {
+  "colhereiro": "Colhereiro",
+  "guará-vermelho": "Guará-vermelho",
+  "martim-pescador": "Martim-pescador",
+  "guaiamum": "Guaiamum",
+  "mangue-maçã": "Mangue-maçã"
+};
+
+function nomeEspecie(valor) {
+  const chave = String(valor || "").trim().toLowerCase();
+  return NOMES_ESPECIES[chave] || "Não identificado";
+}
+
 function obterNumero(...valores) {
   const valor = valores.find(
     (item) => item !== null && item !== undefined && item !== ""
@@ -36,16 +49,8 @@ function obterNumero(...valores) {
 }
 
 function normalizarObservacao(item, indice) {
-  const latitude = obterNumero(
-    item?.latitude,
-    item?.lat,
-    item?.localizacao?.latitude
-  );
-  const longitude = obterNumero(
-    item?.longitude,
-    item?.lng,
-    item?.localizacao?.longitude
-  );
+  const latitude = obterNumero(item?.latitude, item?.lat);
+  const longitude = obterNumero(item?.longitude, item?.lng);
   if (
     latitude === null ||
     longitude === null ||
@@ -60,17 +65,12 @@ function normalizarObservacao(item, indice) {
     id: String(item?.id ?? `registro-${indice}`),
     latitude,
     longitude,
-    especie: String(
-      item?.especie_corrigida ||
-        item?.especie_detectada ||
-        item?.especie ||
-        item?.nome_especie ||
-        "Não identificada"
+    especie: nomeEspecie(
+      item?.especie_corrigida || item?.especie_detectada || item?.especie
     ),
     capturadoEm: String(
       item?.capturado_em || item?.criado_em || "Data não informada"
-    ),
-    confianca: obterNumero(item?.confianca)
+    )
   };
 }
 
@@ -88,13 +88,7 @@ function criarMapaHtml(marcadores) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    html, body, #map {
-      width: 100%;
-      height: 100%;
-      margin: 0;
-      padding: 0;
-      background: #fff1f1;
-    }
+    html, body, #map { width: 100%; height: 100%; margin: 0; padding: 0; background: #fff1f1; }
     .popup-titulo { margin-bottom: 4px; color: #325543; font-weight: 700; }
     .popup-texto { color: #666; font-size: 12px; }
   </style>
@@ -120,50 +114,37 @@ function criarMapaHtml(marcadores) {
       attribution: "&copy; OpenStreetMap contributors"
     }).addTo(mapa);
 
-    var camadaRegistros = L.layerGroup().addTo(mapa);
-    var pontosCalor = [];
+    // Mapa de calor: cada registro soma 1, então áreas com mais
+    // registros ficam mais quentes (vermelho) e as com poucos, verdes.
+    var pontosCalor = dados.map(function (item) {
+      return [item.latitude, item.longitude, 1];
+    });
+    var camadaCalor = null;
+    if (typeof L.heatLayer === "function" && pontosCalor.length > 0) {
+      camadaCalor = L.heatLayer(pontosCalor, {
+        radius: 30,
+        blur: 22,
+        maxZoom: 17,
+        max: 1.5,
+        minOpacity: 0.3,
+        gradient: { 0.0: "#325543", 0.5: "#e8b84a", 1.0: "#d25240" }
+      }).addTo(mapa);
+    }
 
+    // Pontos individuais: ficam desmarcados por padrão.
+    var camadaRegistros = L.layerGroup();
     dados.forEach(function (item) {
       var popup =
         '<div class="popup-titulo">' + escapar(item.especie) + "</div>" +
         '<div class="popup-texto">Data: ' + escapar(item.capturadoEm) + "</div>";
-
       L.circleMarker([item.latitude, item.longitude], {
-        radius: 8,
+        radius: 5,
         color: "#FFFFFF",
-        weight: 2,
-        fillColor: "#d25240",
-        fillOpacity: 0.95
+        weight: 1.5,
+        fillColor: "#325543",
+        fillOpacity: 0.9
       }).bindPopup(popup).addTo(camadaRegistros);
-
-      var peso = Number(item.confianca);
-      pontosCalor.push([
-        item.latitude,
-        item.longitude,
-        isFinite(peso) ? Math.max(0.3, Math.min(peso, 1)) : 0.7
-      ]);
     });
-
-    var camadaCalor = null;
-    if (typeof L.heatLayer === "function" && pontosCalor.length > 0) {
-      camadaCalor = L.heatLayer(pontosCalor, {
-        radius: 35,
-        blur: 25,
-        maxZoom: 17,
-        max: 1.0,
-        minOpacity: 0.35,
-        gradient: { 0.2: "#6c9ea9", 0.45: "#325543", 0.7: "#d25240", 1.0: "#6c3229" }
-      }).addTo(mapa);
-    }
-
-    if (dados.length > 1) {
-      mapa.fitBounds(
-        L.latLngBounds(dados.map(function (item) {
-          return [item.latitude, item.longitude];
-        })),
-        { padding: [30, 30] }
-      );
-    }
 
     var camadaUsuario = L.layerGroup().addTo(mapa);
     var centralizouNoUsuario = dados.length > 0;
@@ -205,6 +186,28 @@ function criarMapaHtml(marcadores) {
       sobreposicoes["Mapa de calor"] = camadaCalor;
     }
     L.control.layers(null, sobreposicoes, { collapsed: false }).addTo(mapa);
+
+    var legenda = L.control({ position: "bottomright" });
+    legenda.onAdd = function () {
+      var div = L.DomUtil.create("div");
+      div.style.cssText =
+        "background:#fff;padding:8px 10px;border-radius:10px;font:12px sans-serif;color:#325543;box-shadow:0 1px 4px rgba(0,0,0,.2)";
+      div.innerHTML =
+        "<b>Incidência</b>" +
+        "<div style='width:120px;height:10px;border-radius:5px;margin:4px 0;background:linear-gradient(to right,#325543,#e8b84a,#d25240)'></div>" +
+        "<div style='display:flex;justify-content:space-between'><span>menor</span><span>maior</span></div>";
+      return div;
+    };
+    legenda.addTo(mapa);
+
+    if (dados.length > 1) {
+      mapa.fitBounds(
+        L.latLngBounds(dados.map(function (item) {
+          return [item.latitude, item.longitude];
+        })),
+        { padding: [30, 30] }
+      );
+    }
   </script>
 </body>
 </html>`;
@@ -267,9 +270,7 @@ export default function MapScreen({
   );
 
   const especies = useMemo(() => {
-    const nomes = [
-      ...new Set(marcadores.map((item) => item.especie.trim()).filter(Boolean))
-    ];
+    const nomes = [...new Set(marcadores.map((item) => item.especie))];
     return ["Todas", ...nomes];
   }, [marcadores]);
 
