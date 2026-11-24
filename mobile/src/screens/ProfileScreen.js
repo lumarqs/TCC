@@ -8,6 +8,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  Platform,
   View
 } from "react-native";
 
@@ -104,15 +105,18 @@ export default function ProfileScreen({
     }
   }
 
-  function confirmarSaida() {
+    function confirmarSaida() {
+    if (Platform.OS === "web") {
+      if (window.confirm("Deseja realmente sair?")) {
+        onLogout();
+      }
+      return;
+    }
     Alert.alert(
       "Sair da conta",
       "Deseja realmente sair?",
       [
-        {
-          text: "Cancelar",
-          style: "cancel"
-        },
+        { text: "Cancelar", style: "cancel" },
         {
           text: "Sair",
           style: "destructive",

@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
+import * as ImageManipulator from "expo-image-manipulator";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -148,6 +149,24 @@ function formatarEspecie(nome) {
   return texto.charAt(0).toUpperCase() + texto.slice(1);
 }
 
+// Reduz a foto para caber no limite do servidor.
+async function reduzirFoto(asset) {
+  const manipulada = await ImageManipulator.manipulateAsync(
+    asset.uri,
+    [{ resize: { width: 900 } }],
+    {
+      compress: 0.7,
+      format: ImageManipulator.SaveFormat.JPEG,
+      base64: true
+    }
+  );
+  return {
+    uri: manipulada.uri,
+    base64: manipulada.base64,
+    mimeType: "image/jpeg"
+  };
+}
+
 export default function CaptureScreen({
   onNavigate
 }) {
@@ -186,8 +205,8 @@ export default function CaptureScreen({
         resultadoFoto =
           await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ["images"],
-            quality: 0.8,
-            base64: true,
+            quality: 1,
+            base64: false,
             allowsEditing: false
           });
       } else {
@@ -211,8 +230,9 @@ export default function CaptureScreen({
       if (resultadoFoto.canceled) {
         return;
       }
-      const fotoCapturada =
-        resultadoFoto.assets[0];
+            const fotoCapturada = await reduzirFoto(
+        resultadoFoto.assets[0]
+      );
       // Localização depois da foto, com limite de tempo
       // (no PC o GPS pode demorar muito).
       const permissaoLocalizacao =

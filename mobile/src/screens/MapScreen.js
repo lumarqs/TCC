@@ -1,4 +1,4 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { obterToken } from "../api/auth";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -27,7 +27,6 @@ import {
 const WORKER_URL =
   "https://green-union-3fea.analuiza-oliveira13.workers.dev";
 
-const TOKEN_STORAGE_KEYS = ["authToken", "token", "accessToken"];
 
 function obterNumero(...valores) {
   const valor = valores.find(
@@ -222,6 +221,29 @@ function criarMapaHtml(marcadores) {
       "Registros": camadaMarcadores
     };
 
+        if (navigator.geolocation) {
+      navigator.geolocation.watchPosition(
+        function (pos) {
+          const ponto = [pos.coords.latitude, pos.coords.longitude];
+          if (!window.marcadorUsuario) {
+            window.marcadorUsuario = L.circleMarker(ponto, {
+              radius: 9,
+              color: "#FFFFFF",
+              weight: 3,
+              fillColor: "#6c9ea9",
+              fillOpacity: 1
+            })
+              .bindTooltip("Você está aqui")
+              .addTo(mapa);
+          } else {
+            window.marcadorUsuario.setLatLng(ponto);
+          }
+        },
+        function () {},
+        { enableHighAccuracy: true }
+      );
+    }
+
     if (typeof L.heatLayer === "function" && pontosCalor.length > 0) {
       const camadaCalor = L.heatLayer(pontosCalor, {
         radius: 35,
@@ -279,20 +301,11 @@ export default function MapScreen({
     setErro("");
 
     try {
-      let token = "";
-
-      for (const chave of TOKEN_STORAGE_KEYS) {
-        const valor = await AsyncStorage.getItem(chave);
-
-        if (valor) {
-          token = valor;
-          break;
-        }
-      }
-
+            const token = obterToken();
       if (!token) {
         setErro("Faça login para ver o mapa.");
         return;
+      }
       }
 
       const resposta = await fetch(`${WORKER_URL}/observacoes`, {
@@ -417,9 +430,10 @@ export default function MapScreen({
 
       <View style={styles.mapaCard}>
         {Platform.OS === "web" ? (
-          <iframe
+                    <iframe
             srcDoc={mapaHtml}
             title="Mapa do mangue"
+            allow="geolocation"
             style={styles.iframe}
           />
         ) : (

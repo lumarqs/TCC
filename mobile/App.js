@@ -24,33 +24,6 @@ import SignupScreen from "./src/screens/SignupScreen";
 import { COLORS } from "./src/theme";
 
 
-const observacoesTeste = [
-  {
-    id: "teste-1",
-    latitude: -23.8519,
-    longitude: -46.1417,
-    peso: 23,
-    especie: "Guará Vermelho",
-    descricao: "Observação simulada no manguezal."
-  },
-  {
-    id: "teste-2",
-    latitude: -23.8542,
-    longitude: -46.1384,
-    peso: 10,
-    especie: "Martim-Pescador",
-    descricao: "Ave observada próxima ao rio."
-  },
-  {
-    id: "teste-3",
-    latitude: -23.8487,
-    longitude: -46.1451,
-    peso: 58,
-    especie: "Mangue Maçã",
-    descricao: "Vegetação característica do manguezal."
-  }
-];
-
 export default function App() {
   const [tela, setTela] = useState("login");
   const [usuario, setUsuario] = useState(null);
@@ -145,11 +118,10 @@ export default function App() {
   }
 
   function renderizarTela() {
-    if (tela === "login") {
+        if (tela === "mapa") {
       return (
-        <LoginScreen
+        <MapScreen
           onNavigate={setTela}
-          onAuthenticated={entrar}
         />
       );
     }

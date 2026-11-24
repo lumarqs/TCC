@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -10,7 +9,6 @@ import {
   TextInput,
   View
 } from "react-native";
-
 import { cadastrarUsuario } from "../api/auth";
 import BrandHeader from "../components/BrandHeader";
 import PrimaryButton from "../components/PrimaryButton";
@@ -27,7 +25,6 @@ function nomeCompletoValido(nome) {
     .trim()
     .split(/\s+/)
     .filter(Boolean);
-
   return partes.length >= 2;
 }
 
@@ -51,81 +48,78 @@ export default function SignupScreen({
     useState("");
   const [carregando, setCarregando] =
     useState(false);
+  // { tipo: "erro" | "ok", texto: string }
+  const [aviso, setAviso] = useState(null);
 
   async function cadastrar() {
+    setAviso(null);
     const nomeNormalizado = nome
       .trim()
       .replace(/\s+/g, " ");
-
     const emailNormalizado = email
       .trim()
       .toLowerCase();
 
     if (!nomeNormalizado || !emailNormalizado || !senha) {
-      Alert.alert(
-        "Campos obrigatórios",
-        "Preencha todos os campos."
-      );
+      setAviso({
+        tipo: "erro",
+        texto: "Preencha todos os campos."
+      });
       return;
     }
-
     if (!nomeCompletoValido(nomeNormalizado)) {
-      Alert.alert(
-        "Nome inválido",
-        "Informe seu nome e sobrenome."
-      );
+      setAviso({
+        tipo: "erro",
+        texto: "Informe seu nome e sobrenome."
+      });
       return;
     }
-
-    if (!/^[^\s@]+@[^\s@]+$/.test(emailNormalizado)) {
-      Alert.alert(
-        "E-mail inválido",
-        "Informe um e-mail válido."
-      );
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNormalizado)) {
+      setAviso({
+        tipo: "erro",
+        texto: "Informe um e-mail válido."
+      });
       return;
     }
-
     if (!senhaValida(senha)) {
-      Alert.alert(
-        "Senha fraca",
-        "A senha precisa ter pelo menos 8 caracteres, uma letra maiúscula, uma letra minúscula, um número e um caractere especial."
-      );
+      setAviso({
+        tipo: "erro",
+        texto:
+          "A senha precisa ter 8 caracteres, com maiúscula, minúscula, número e caractere especial."
+      });
       return;
     }
-
     if (senha !== confirmarSenha) {
-      Alert.alert(
-        "Senhas diferentes",
-        "A confirmação de senha não coincide."
-      );
+      setAviso({
+        tipo: "erro",
+        texto: "A confirmação de senha não coincide."
+      });
       return;
     }
 
     setCarregando(true);
-
     try {
       await cadastrarUsuario({
         nome: nomeNormalizado,
         email: emailNormalizado,
         senha
       });
-
-      Alert.alert(
-        "Cadastro realizado",
-        "Sua conta foi criada com sucesso.",
-        [
-          {
-            text: "Ir para o login",
-            onPress: () => onNavigate("login")
-          }
-        ]
-      );
+      setNome("");
+      setEmail("");
+      setSenha("");
+      setConfirmarSenha("");
+      setAviso({
+        tipo: "ok",
+        texto:
+          "Conta criada com sucesso! Toque abaixo para entrar."
+      });
     } catch (error) {
-      Alert.alert(
-        "Não foi possível cadastrar",
-        error?.message ||
-          "Tente novamente."
-      );
+      setAviso({
+        tipo: "erro",
+        texto:
+          error?.message ||
+          "Não foi possível cadastrar. Tente novamente."
+      });
     } finally {
       setCarregando(false);
     }
@@ -151,6 +145,20 @@ export default function SignupScreen({
           description="Cadastre-se para registrar e acompanhar suas observações."
         />
 
+        {aviso ? (
+          <View
+            style={
+              aviso.tipo === "ok"
+                ? styles.avisoOk
+                : styles.avisoErro
+            }
+          >
+            <Text style={styles.avisoTexto}>
+              {aviso.texto}
+            </Text>
+          </View>
+        ) : null}
+
         <View style={styles.card}>
           <Text style={styles.cardTitle}>
             Cadastro
@@ -159,7 +167,6 @@ export default function SignupScreen({
           <Text style={styles.label}>
             Nome completo
           </Text>
-
           <TextInput
             value={nome}
             onChangeText={setNome}
@@ -173,7 +180,6 @@ export default function SignupScreen({
           <Text style={styles.label}>
             E-mail
           </Text>
-
           <TextInput
             value={email}
             onChangeText={setEmail}
@@ -189,7 +195,6 @@ export default function SignupScreen({
           <Text style={styles.label}>
             Senha
           </Text>
-
           <TextInput
             value={senha}
             onChangeText={setSenha}
@@ -201,7 +206,6 @@ export default function SignupScreen({
             editable={!carregando}
             style={styles.input}
           />
-
           <Text style={styles.dica}>
             Mínimo de 8 caracteres, com maiúscula,
             minúscula, número e caractere especial.
@@ -210,7 +214,6 @@ export default function SignupScreen({
           <Text style={styles.label}>
             Confirmar senha
           </Text>
-
           <TextInput
             value={confirmarSenha}
             onChangeText={setConfirmarSenha}
@@ -223,19 +226,30 @@ export default function SignupScreen({
             style={styles.input}
           />
 
-          <PrimaryButton
-            title="Criar cadastro"
-            onPress={cadastrar}
-            loading={carregando}
-            disabled={carregando}
-          />
+          <View style={styles.botao}>
+            <PrimaryButton
+              title="Criar cadastro"
+              onPress={cadastrar}
+              loading={carregando}
+              disabled={carregando}
+            />
+          </View>
+
+          {aviso?.tipo === "ok" ? (
+            <View style={styles.botao}>
+              <PrimaryButton
+                title="Ir para o login"
+                onPress={() => onNavigate("login")}
+                variant="secondary"
+              />
+            </View>
+          ) : null}
         </View>
 
         <View style={styles.rodape}>
           <Text style={styles.rodapeTexto}>
             Já possui uma conta?
           </Text>
-
           <Pressable
             onPress={() => onNavigate("login")}
             disabled={carregando}
@@ -254,7 +268,6 @@ const styles = StyleSheet.create({
   flex: {
     flex: 1
   },
-
   container: {
     flexGrow: 1,
     backgroundColor: COLORS.pink,
@@ -262,19 +275,35 @@ const styles = StyleSheet.create({
     paddingTop: 62,
     paddingBottom: SPACING.xxl
   },
-
+  avisoErro: {
+    backgroundColor: "#B3261E",
+    borderRadius: RADIUS.md,
+    padding: SPACING.md,
+    marginTop: SPACING.lg
+  },
+  avisoOk: {
+    backgroundColor: COLORS.green,
+    borderRadius: RADIUS.md,
+    padding: SPACING.md,
+    marginTop: SPACING.lg
+  },
+  avisoTexto: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "700",
+    lineHeight: 20
+  },
   card: {
     backgroundColor: COLORS.white,
     borderRadius: RADIUS.lg,
     padding: SPACING.lg,
+    marginTop: SPACING.lg,
     ...SHADOW.card
   },
-
   cardTitle: {
     ...TYPOGRAPHY.sectionTitle,
     marginBottom: SPACING.lg
   },
-
   label: {
     color: COLORS.green,
     fontSize: 13,
@@ -282,7 +311,6 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.sm,
     marginTop: SPACING.sm
   },
-
   input: {
     minHeight: 52,
     borderWidth: 1,
@@ -293,24 +321,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     fontSize: 15
   },
-
   dica: {
     color: COLORS.gray,
     fontSize: 12,
     lineHeight: 17,
     marginTop: SPACING.sm
   },
-
+  botao: {
+    marginTop: SPACING.lg
+  },
   rodape: {
     alignItems: "center",
     marginTop: SPACING.lg
   },
-
   rodapeTexto: {
     color: COLORS.gray,
     fontSize: 14
   },
-
   link: {
     color: COLORS.green,
     fontSize: 15,
