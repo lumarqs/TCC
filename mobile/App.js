@@ -28,6 +28,26 @@ export default function App() {
   const [tela, setTela] = useState("login");
   const [usuario, setUsuario] = useState(null);
   const [fotoPerfil, setFotoPerfil] = useState(null);
+    // Atualiza pontos e dados do usuário ao abrir Início ou Perfil.
+  useEffect(() => {
+    if (!usuario || !obterToken()) {
+      return;
+    }
+    if (tela !== "inicio" && tela !== "perfil") {
+      return;
+    }
+    let ativo = true;
+    obterMeuPerfil()
+      .then((dados) => {
+        if (ativo && dados?.usuario) {
+          setUsuario((atual) => ({ ...atual, ...dados.usuario }));
+        }
+      })
+      .catch(() => {});
+    return () => {
+      ativo = false;
+    };
+  }, [tela]);
 
   // Ao abrir o app, verifica se existe uma sessão salva.
   // Se houver, valida com o servidor e entra direto —

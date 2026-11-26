@@ -121,12 +121,12 @@ function criarMapaHtml(marcadores) {
     });
     var camadaCalor = null;
     if (typeof L.heatLayer === "function" && pontosCalor.length > 0) {
-      camadaCalor = L.heatLayer(pontosCalor, {
-        radius: 30,
-        blur: 22,
+            camadaCalor = L.heatLayer(pontosCalor, {
+        radius: 45,
+        blur: 35,
         maxZoom: 17,
-        max: 1.5,
-        minOpacity: 0.3,
+        max: Math.max(2, dados.length / 4),
+        minOpacity: 0.4,
         gradient: { 0.0: "#325543", 0.5: "#e8b84a", 1.0: "#d25240" }
       }).addTo(mapa);
     }

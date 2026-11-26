@@ -52,6 +52,15 @@ const ENCICLOPEDIA = {
       "Caranguejo terrestre de coloração azulada, muito comum em áreas de mangue. Cava tocas profundas no solo e se alimenta principalmente de folhas em decomposição.",
     curiosidade:
       "Tem importância cultural e econômica para as comunidades pesqueiras do litoral brasileiro."
+  },
+    "mangue-maçã": {
+    nome: "Mangue-maçã",
+    cientifico: "Sonneratia caseolaris",
+    grupo: "Árvore de mangue",
+    descricao:
+      "Árvore típica de áreas de influência de rios e estuários, com raízes aéreas e folhas largas. Suas flores abrem à noite, e seus frutos arredondados ajudam a dispersar sementes pela água.",
+    curiosidade:
+      "Os frutos lembram pequenas maçãs, e daí vem o nome popular da espécie."
   }
 };
 
