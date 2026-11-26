@@ -109,12 +109,42 @@ function criarMapaHtml(marcadores) {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <style>
-    html, body, #map { width: 100%; height: 100%; margin: 0; padding: 0; background: #fff1f1; }
-    .leaflet-control-attribution { font-size: 9px; }
-    .leaflet-control-layers { font-size: 14px; }
-    .leaflet-control-layers-expanded { padding: 8px 10px; }
-  </style>
+  html, body, #map {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: #fff1f1;
+}
+.leaflet-container { font: 13px sans-serif; }
+.leaflet-control-attribution { font-size: 9px; }
+.leaflet-top, .leaflet-bottom { position: absolute; z-index: 1000; }
+.leaflet-top { top: 0; }
+.leaflet-bottom { bottom: 0; }
+.leaflet-left { left: 0; }
+.leaflet-right { right: 0; }
+.leaflet-control { position: relative; z-index: 800; margin: 10px; clear: both; pointer-events: auto; }
+.leaflet-bar { border: 2px solid rgba(0,0,0,.2); border-radius: 6px; overflow: hidden; background: #fff; }
+.leaflet-bar a {
+  display: block;
+  width: 34px;
+  height: 34px;
+  line-height: 34px;
+  text-align: center;
+  text-decoration: none;
+  color: #325543;
+  background: #fff;
+  font: 700 20px sans-serif;
+}
+.leaflet-control-layers {
+  background: #fff;
+  border-radius: 8px;
+  padding: 8px 10px;
+  box-shadow: 0 1px 5px rgba(0,0,0,.25);
+  color: #325543;
+  font: 14px sans-serif;
+}
+.leaflet-control-layers label { display: block; margin: 4px 0; }
 </head>
 <body>
   <div id="map"></div>
@@ -202,6 +232,9 @@ function criarMapaHtml(marcadores) {
 
     // Em alguns celulares o mapa nasce com tamanho zero dentro do WebView.
     setTimeout(function () { mapa.invalidateSize(); }, 300);
+        window.addEventListener("load", function () {
+      setTimeout(function () { mapa.invalidateSize(); }, 200);
+    });
   </script>
 </body>
 </html>`;
