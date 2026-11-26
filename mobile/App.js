@@ -117,11 +117,12 @@ export default function App() {
     // Ela reaparecerá quando o usuário entrar novamente.
   }
 
-  function renderizarTela() {
-        if (tela === "mapa") {
+    function renderizarTela() {
+    if (tela === "login") {
       return (
-        <MapScreen
+        <LoginScreen
           onNavigate={setTela}
+          onAuthenticated={entrar}
         />
       );
     }
@@ -138,7 +139,6 @@ export default function App() {
       return (
         <MapScreen
           onNavigate={setTela}
-          observacoes={observacoesTeste}
         />
       );
     }
