@@ -78,9 +78,130 @@ function criarMapaHtml(marcadores) {
   const centro = marcadores.length
     ? [marcadores[0].latitude, marcadores[0].longitude]
     : [-1.4558, -48.4902];
-  const dadosJson = JSON.stringify(marcadores).replace(/</g, "\\u003c");
+
+  // Soma os registros que caem no mesmo local (cerca de 10 m),
+  // para que a intensidade reflita a incidência.
+  const agrupados = {};
+  marcadores.forEach((item) => {
+    const chave = item.latitude.toFixed(4) + "," + item.longitude.toFixed(4);
+    if (!agrupados[chave]) {
+      agrupados[chave] = {
+        latitude: item.latitude,
+        longitude: item.longitude,
+        quantidade: 0
+      };
+    }
+    agrupados[chave].quantidade += 1;
+  });
+  const pontos = Object.values(agrupados);
+  const maiorQuantidade = pontos.reduce(
+    (maior, ponto) => Math.max(maior, ponto.quantidade),
+    1
+  );
+  const pontosJson = JSON.stringify(
+    pontos.map((ponto) => [ponto.latitude, ponto.longitude, ponto.quantidade])
+  ).replace(/</g, "\\u003c");
 
   return `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    html, body, #map { width: 100%; height: 100%; margin: 0; padding: 0; background: #fff1f1; }
+    .leaflet-control-attribution { font-size: 9px; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+  <script>
+    var centro = ${JSON.stringify(centro)};
+    var pontosCalor = ${pontosJson};
+    var maximo = ${maiorQuantidade};
+
+    var mapa = L.map("map", { zoomControl: true }).setView(centro, 15);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: "&copy; OpenStreetMap contributors"
+    }).addTo(mapa);
+
+    var camadaCalor = null;
+    if (typeof L.heatLayer === "function" && pontosCalor.length > 0) {
+      camadaCalor = L.heatLayer(
+        pontosCalor.map(function (p) {
+          return [p[0], p[1], p[2] / maximo];
+        }),
+        {
+          radius: 40,
+          blur: 30,
+          maxZoom: 17,
+          max: 1,
+          minOpacity: 0.25,
+          gradient: { 0.0: "#325543", 0.5: "#e8b84a", 1.0: "#d25240" }
+        }
+      ).addTo(mapa);
+    }
+
+    if (pontosCalor.length > 1) {
+      mapa.fitBounds(
+        L.latLngBounds(pontosCalor.map(function (p) { return [p[0], p[1]]; })),
+        { padding: [30, 30] }
+      );
+    }
+
+    var camadaUsuario = L.layerGroup().addTo(mapa);
+    var centralizouNoUsuario = pontosCalor.length > 0;
+
+    if (navigator.geolocation) {
+      navigator.geolocation.watchPosition(
+        function (pos) {
+          var ponto = [pos.coords.latitude, pos.coords.longitude];
+          camadaUsuario.clearLayers();
+          L.circleMarker(ponto, {
+            radius: 9,
+            color: "#FFFFFF",
+            weight: 3,
+            fillColor: "#6c9ea9",
+            fillOpacity: 1
+          }).bindTooltip("Você está aqui").addTo(camadaUsuario);
+          if (!centralizouNoUsuario) {
+            mapa.setView(ponto, 16);
+            centralizouNoUsuario = true;
+          }
+        },
+        function () {},
+        { enableHighAccuracy: true, maximumAge: 10000 }
+      );
+    }
+
+    var sobreposicoes = { "Minha localização": camadaUsuario };
+    if (camadaCalor) {
+      sobreposicoes["Mapa de calor"] = camadaCalor;
+    }
+    L.control.layers(null, sobreposicoes, { collapsed: false }).addTo(mapa);
+
+    var legenda = L.control({ position: "bottomright" });
+    legenda.onAdd = function () {
+      var div = L.DomUtil.create("div");
+      div.style.cssText =
+        "background:#fff;padding:8px 10px;border-radius:10px;font:12px sans-serif;color:#325543;box-shadow:0 1px 4px rgba(0,0,0,.2)";
+      div.innerHTML =
+        "<b>Incidência</b>" +
+        "<div style='width:120px;height:10px;border-radius:5px;margin:4px 0;background:linear-gradient(to right,#325543,#e8b84a,#d25240)'></div>" +
+        "<div style='display:flex;justify-content:space-between'><span>menor</span><span>maior</span></div>";
+      return div;
+    };
+    legenda.addTo(mapa);
+  </script>
+</body>
+</html>`;
+}
+ 
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
