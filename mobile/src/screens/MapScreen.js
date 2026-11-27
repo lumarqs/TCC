@@ -79,8 +79,6 @@ function criarMapaHtml(marcadores) {
     ? [marcadores[0].latitude, marcadores[0].longitude]
     : [-1.4558, -48.4902];
 
-  // Soma os registros que caem no mesmo ponto (cerca de 10 m).
-  // Assim, a intensidade do calor reflete a incidência.
   const agrupados = {};
   marcadores.forEach((item) => {
     const chave = item.latitude.toFixed(4) + "," + item.longitude.toFixed(4);
@@ -93,16 +91,169 @@ function criarMapaHtml(marcadores) {
     }
     agrupados[chave].quantidade += 1;
   });
-  const pontos = Object.values(agrupados);
-  const maiorQuantidade = pontos.reduce(
-    (maior, ponto) => Math.max(maior, ponto.quantidade),
-    1
+  const pontos = Object.values(agrupados).map((p) => [
+    p.latitude,
+    p.longitude,
+    p.quantidade
+  ]);
+  const maximo = pontos.reduce((m, p) => Math.max(m, p[2]), 1);
+  const dadosJson = JSON.stringify({ centro, pontos, maximo }).replace(
+    /</g,
+    "\\u003c"
   );
-  const pontosJson = JSON.stringify(
-    pontos.map((ponto) => [ponto.latitude, ponto.longitude, ponto.quantidade])
-  ).replace(/</g, "\\u003c");
 
-  return `
+  return `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    html, body, #map {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background: #fff1f1;
+    }
+    #aviso {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      right: 8px;
+      z-index: 3000;
+      display: none;
+      background: #ffffff;
+      color: #d25240;
+      font: 13px sans-serif;
+      padding: 8px 10px;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.2);
+    }
+    .leaflet-control-attribution { font-size: 9px; }
+    .legenda-incidencia {
+      background: #fff;
+      padding: 8px 10px;
+      border-radius: 10px;
+      font: 13px sans-serif;
+      color: #325543;
+      box-shadow: 0 1px 4px rgba(0,0,0,.2);
+    }
+    .barra-incidencia {
+      width: 130px;
+      height: 10px;
+      border-radius: 5px;
+      margin: 4px 0;
+      background: linear-gradient(to right, #325543, #e8b84a, #d25240);
+    }
+    .escala-incidencia { display: flex; justify-content: space-between; }
+  </style>
+</head>
+<body>
+  <div id="aviso"></div>
+  <div id="map"></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+  <script>
+    var aviso = document.getElementById("aviso");
+
+    function mostrarAviso(texto) {
+      aviso.textContent = texto;
+      aviso.style.display = "block";
+    }
+
+    window.onerror = function (mensagem) {
+      mostrarAviso("Erro no mapa: " + mensagem);
+    };
+
+    if (typeof L === "undefined") {
+      mostrarAviso("O Leaflet não carregou. Verifique a conexão com a internet.");
+    } else {
+      var dados = ${dadosJson};
+
+      var mapa = L.map("map", { zoomControl: true }).setView(dados.centro, 15);
+
+      var mapaBase = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: "&copy; OpenStreetMap contributors"
+      }).addTo(mapa);
+
+      mapaBase.on("tileerror", function () {
+        mostrarAviso("Os tiles do mapa não carregaram. Verifique a conexão.");
+      });
+
+      var camadaCalor = null;
+      if (typeof L.heatLayer === "function" && dados.pontos.length > 0) {
+        camadaCalor = L.heatLayer(
+          dados.pontos.map(function (p) {
+            return [p[0], p[1], p[2] / dados.maximo];
+          }),
+          {
+            radius: 40,
+            blur: 30,
+            maxZoom: 17,
+            max: 1,
+            minOpacity: 0.3,
+            gradient: { 0.0: "#325543", 0.5: "#e8b84a", 1.0: "#d25240" }
+          }
+        ).addTo(mapa);
+      }
+
+      if (dados.pontos.length > 1) {
+        mapa.fitBounds(
+          L.latLngBounds(dados.pontos.map(function (p) { return [p[0], p[1]]; })),
+          { padding: [30, 30] }
+        );
+      }
+
+      var camadaUsuario = L.layerGroup().addTo(mapa);
+      var centralizou = dados.pontos.length > 0;
+
+      if (navigator.geolocation) {
+        navigator.geolocation.watchPosition(
+          function (pos) {
+            var ponto = [pos.coords.latitude, pos.coords.longitude];
+            camadaUsuario.clearLayers();
+            L.circleMarker(ponto, {
+              radius: 9,
+              color: "#FFFFFF",
+              weight: 3,
+              fillColor: "#6c9ea9",
+              fillOpacity: 1
+            }).bindTooltip("Você está aqui").addTo(camadaUsuario);
+            if (!centralizou) {
+              mapa.setView(ponto, 16);
+              centralizou = true;
+            }
+          },
+          function () {},
+          { enableHighAccuracy: true, maximumAge: 10000 }
+        );
+      }
+
+      var sobreposicoes = { "Minha localização": camadaUsuario };
+      if (camadaCalor) {
+        sobreposicoes["Mapa de calor"] = camadaCalor;
+      }
+      L.control.layers(null, sobreposicoes, { collapsed: false }).addTo(mapa);
+
+      var legenda = L.control({ position: "bottomright" });
+      legenda.onAdd = function () {
+        var div = L.DomUtil.create("div", "legenda-incidencia");
+        div.innerHTML =
+          "<b>Incidência</b>" +
+          "<div class='barra-incidencia'></div>" +
+          "<div class='escala-incidencia'><span>menor</span><span>maior</span></div>";
+        return div;
+      };
+      legenda.addTo(mapa);
+
+      setTimeout(function () { mapa.invalidateSize(); }, 300);
+    }
+  </script>
+</body>
+</html>`;
+}
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
