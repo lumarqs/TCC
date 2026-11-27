@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -11,7 +12,12 @@ import {
 import { obterToken } from "../api/auth";
 import BrandHeader from "../components/BrandHeader";
 import { WORKER_URL } from "../config";
-import { COLORS, RADIUS, SHADOW, SPACING } from "../theme";
+import {
+  COLORS,
+  RADIUS,
+  SHADOW,
+  SPACING
+} from "../theme";
 
 let WebView = null;
 if (Platform.OS !== "web") {
@@ -68,14 +74,13 @@ function normalizarObservacao(item, indice) {
   };
 }
 
-// Neste arquivo, o HTML do mapa usa @ no lugar de <.
-// A função criarMapaHtml converte todos os @ em < no final.
 function criarMapaHtml(marcadores) {
   const centro = marcadores.length
     ? [marcadores[0].latitude, marcadores[0].longitude]
     : [-1.4558, -48.4902];
 
   // Soma os registros que caem no mesmo ponto (cerca de 10 m).
+  // Assim, a intensidade do calor reflete a incidência.
   const agrupados = {};
   marcadores.forEach((item) => {
     const chave = item.latitude.toFixed(4) + "," + item.longitude.toFixed(4);
@@ -88,42 +93,39 @@ function criarMapaHtml(marcadores) {
     }
     agrupados[chave].quantidade += 1;
   });
-
-  const pontos = Object.values(agrupados).map((p) => [
-    p.latitude,
-    p.longitude,
-    p.quantidade
-  ]);
-  const maximo = pontos.reduce((m, p) => Math.max(m, p[2]), 1);
-  const dados = JSON.stringify({ centro, pontos, maximo }).replace(
-    /</g,
-    "\\u003c"
+  const pontos = Object.values(agrupados);
+  const maiorQuantidade = pontos.reduce(
+    (maior, ponto) => Math.max(maior, ponto.quantidade),
+    1
   );
+  const pontosJson = JSON.stringify(
+    pontos.map((ponto) => [ponto.latitude, ponto.longitude, ponto.quantidade])
+  ).replace(/</g, "\\u003c");
 
-  return `@!DOCTYPE html>
-@html lang="pt-BR">
-@head>
-  @meta charset="UTF-8" />
-  @meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  @link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  @style>
+  return `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
     html, body, #map { width: 100%; height: 100%; margin: 0; padding: 0; background: #fff1f1; }
     .leaflet-control-attribution { font-size: 9px; }
-    .leaflet-control-layers { font: 14px sans-serif; color: #325543; }
-    .leaflet-control-layers label { display: block; margin: 4px 0; }
-    .legenda-incidencia { background: #fff; padding: 8px 10px; border-radius: 10px; font: 13px sans-serif; color: #325543; box-shadow: 0 1px 4px rgba(0,0,0,.2); }
-    .barra-incidencia { width: 130px; height: 10px; border-radius: 5px; margin: 4px 0; background: linear-gradient(to right, #325543, #e8b84a, #d25240); }
-    .escala-incidencia { display: flex; justify-content: space-between; }
-  @/style>
-@/head>
-@body>
-  @div id="map">@/div>
-  @script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">@/script>
-  @script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js">@/script>
-  @script>
-    var dados = ${dados};
+    .leaflet-control-layers { font-size: 14px; }
+    .leaflet-control-layers-expanded { padding: 8px 10px; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+  <script>
+    var centro = ${JSON.stringify(centro)};
+    var pontosCalor = ${pontosJson};
+    var maximo = ${maiorQuantidade};
 
-    var mapa = L.map("map", { zoomControl: true }).setView(dados.centro, 15);
+    var mapa = L.map("map", { zoomControl: true }).setView(centro, 15);
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
@@ -131,10 +133,10 @@ function criarMapaHtml(marcadores) {
     }).addTo(mapa);
 
     var camadaCalor = null;
-    if (typeof L.heatLayer === "function" && dados.pontos.length > 0) {
+    if (typeof L.heatLayer === "function" && pontosCalor.length > 0) {
       camadaCalor = L.heatLayer(
-        dados.pontos.map(function (p) {
-          return [p[0], p[1], p[2] / dados.maximo];
+        pontosCalor.map(function (p) {
+          return [p[0], p[1], p[2] / maximo];
         }),
         {
           radius: 40,
@@ -147,15 +149,15 @@ function criarMapaHtml(marcadores) {
       ).addTo(mapa);
     }
 
-    if (dados.pontos.length > 1) {
+    if (pontosCalor.length > 1) {
       mapa.fitBounds(
-        L.latLngBounds(dados.pontos.map(function (p) { return [p[0], p[1]]; })),
+        L.latLngBounds(pontosCalor.map(function (p) { return [p[0], p[1]]; })),
         { padding: [30, 30] }
       );
     }
 
     var camadaUsuario = L.layerGroup().addTo(mapa);
-    var centralizou = dados.pontos.length > 0;
+    var centralizouNoUsuario = pontosCalor.length > 0;
 
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(
@@ -169,9 +171,9 @@ function criarMapaHtml(marcadores) {
             fillColor: "#6c9ea9",
             fillOpacity: 1
           }).bindTooltip("Você está aqui").addTo(camadaUsuario);
-          if (!centralizou) {
+          if (!centralizouNoUsuario) {
             mapa.setView(ponto, 16);
-            centralizou = true;
+            centralizouNoUsuario = true;
           }
         },
         function () {},
@@ -187,19 +189,22 @@ function criarMapaHtml(marcadores) {
 
     var legenda = L.control({ position: "bottomright" });
     legenda.onAdd = function () {
-      var div = L.DomUtil.create("div", "legenda-incidencia");
+      var div = L.DomUtil.create("div");
+      div.style.cssText =
+        "background:#fff;padding:8px 10px;border-radius:10px;font:13px sans-serif;color:#325543;box-shadow:0 1px 4px rgba(0,0,0,.2)";
       div.innerHTML =
-        "@b>Incidência@/b>" +
-        "@div class='barra-incidencia'>@/div>" +
-        "@div class='escala-incidencia'>@span>menor@/span>@span>maior@/span>@/div>";
+        "<b>Incidência</b>" +
+        "<div style='width:130px;height:10px;border-radius:5px;margin:4px 0;background:linear-gradient(to right,#325543,#e8b84a,#d25240)'></div>" +
+        "<div style='display:flex;justify-content:space-between'><span>menor</span><span>maior</span></div>";
       return div;
     };
     legenda.addTo(mapa);
 
+    // Em alguns celulares o mapa nasce com tamanho zero dentro do WebView.
     setTimeout(function () { mapa.invalidateSize(); }, 300);
-  @/script>
-@/body>
-@/html>`.replace(/@/g, "<");
+  </script>
+</body>
+</html>`;
 }
 
 export default function MapScreen({
@@ -342,7 +347,6 @@ export default function MapScreen({
             javaScriptEnabled
             domStorageEnabled
             geolocationEnabled
-            mixedContentMode="always"
             startInLoadingState
             renderLoading={() => (
               <View style={styles.carregando}>
